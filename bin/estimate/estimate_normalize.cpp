@@ -75,12 +75,6 @@ int main(int argc, char **argv) {
 			cxxopts::value<int>(),
 			"run"
 		)
-		// (
-		// 	"e,end-run",
-		// 	"End run number.",
-		// 	cxxopts::value<int>(),
-		// 	"run"
-		// )
 		(
 			"t,trigger",
 			"Trigger type.",
@@ -121,7 +115,7 @@ int main(int argc, char **argv) {
 	}
 
 	brill::AppConfig config;
-	if (brill::LoadConfig(result["config"].as<std::string>(), config)) {
+	if (config.Load(result["config"].as<std::string>())) {
 		return 1;
 	}
 	const int run = result["run"].as<int>();
@@ -131,54 +125,44 @@ int main(int argc, char **argv) {
 	// 	PrintUsage(options);
 	// 	return 0;
 	// }
-	if (brill::IsJumpRun(config, run)) {
+	if (config.IsJumpRun(run)) {
 		std::cout << "Skipping jump run " << run << ".\n";
 		return 0;
 	}
 	if (result.count("trigger")) {
-		config.trigger = result["trigger"].as<std::string>();
+		config.root_.trigger = result["trigger"].as<std::string>();
 	}
 	int normalize_file_run = 0;
-	for (const auto &[start, use] : config.normalize.runs) {
+	for (const auto &[start, use] : config.normalize_.runs) {
 		if (run >= start) normalize_file_run = use;
 	}
 
 	for (const std::string &detector_name : detectors) {
 		const brill::SiliconDetectorConfig *detector =
-			brill::FindDetectorConfig(config, detector_name);
+			config.FindDetector(detector_name);
 		if (!detector) {
 			std::cerr << "Error: Detector " << detector_name << " is not found in config.\n";
 			return 1;
 		}
 
-		brill::DssdNormalizeParameters parameters;
-		parameters.front_strips = detector->front_strips;
-		parameters.back_strips = detector->back_strips;
+		brill::DssdNormalizeParameters parameters(detector->front_strips, detector->back_strips);
 
-		std::string normalize_dir = brill::JoinPath(config.workspace, config.paths.normalize);
-		TString front_path = TString::Format(
-			"%s/%s_front_%04d.txt",
+		std::string normalize_dir = brill::JoinPath(config.root_.workspace, config.paths_.normalize);
+		TString parameter_path = TString::Format(
+			"%s/%s_%04d.txt",
 			normalize_dir.c_str(),
 			detector_name.c_str(),
 			normalize_file_run
 		);
-		TString back_path = TString::Format(
-			"%s/%s_back_%04d.txt",
-			normalize_dir.c_str(),
-			detector_name.c_str(),
-			normalize_file_run
-		);
-		if (brill::ReadDssdNormalizeParameters(
-			front_path.Data(), back_path.Data(), parameters
-		)) {
+		if (parameters.Read(parameter_path.Data())) {
 			return 1;
 		}
 
 		TString input_path = TString::Format(
 			"%s/%s_%s%04d.root",
-			brill::JoinPath(config.workspace, config.paths.ingot).c_str(),
+			brill::JoinPath(config.root_.workspace, config.paths_.ingot).c_str(),
 			detector_name.c_str(),
-			brill::TriggerInfix(config.trigger).c_str(),
+			brill::TriggerInfix(config.root_.trigger).c_str(),
 			run
 		);
 		TFile input_file(input_path, "read");
@@ -192,9 +176,9 @@ int main(int argc, char **argv) {
 
 		TString output_path = TString::Format(
 			"%s/%s_normalize_%s%04d.root",
-			brill::JoinPath(config.workspace, config.paths.estimate).c_str(),
+			brill::JoinPath(config.root_.workspace, config.paths_.estimate).c_str(),
 			detector_name.c_str(),
-			brill::TriggerInfix(config.trigger).c_str(),
+			brill::TriggerInfix(config.root_.trigger).c_str(),
 			run
 		);
 		TFile output_file(output_path, "recreate");
@@ -222,7 +206,7 @@ int main(int argc, char **argv) {
 					raw_event.back_energy[i] = raw_event.back_integral[i];
 				}
 			}
-			brill::ApplyDssdNormalize(raw_event, parameters, normalized_event);
+			parameters.Apply(raw_event, normalized_event);
 			opt.Fill();
 			RemoveAdjacentStrips(normalized_event);
 			for (

@@ -1,6 +1,7 @@
 #include "include/t0/dssd.h"
 
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <set>
 #include <string>
@@ -19,24 +20,6 @@
 #include "include/t0/dssd.h"
 #include "include/utils.h"
 
-// inline double NormEnergy(
-// 	const brill::DssdNormalizeParameters &parameters,
-// 	const int side,
-// 	const int strip,
-// 	const double raw_energy
-// ) {
-// 	if (side == 0) {
-// 		return
-// 			parameters.front_p0[strip]
-// 			+ parameters.front_p1[strip] * raw_energy;
-// //			+ parameters.front_p2[strip] * raw_energy * raw_energy;
-// 	}
-// 	return
-// 		parameters.back_p0[strip]
-// 		+ parameters.back_p1[strip] * raw_energy;
-// 		//+ parameters.back_p2[strip] * raw_energy * raw_energy;
-// }
-
 int NormalizeStrips(
 	const brill::NromalizeStripsConfig &config,
 	const bool use_integral,
@@ -46,7 +29,7 @@ int NormalizeStrips(
 	std::vector<bool> &has_normalized
 ) {
 	const int &side = config.norm_side;
-	const int offset = side * parameters.front_strips;
+	const int offset = side * parameters.front_strips_;
 	// energy graph fe:be or be:fe
 	TGraph ge[128];
 
@@ -87,7 +70,7 @@ int NormalizeStrips(
 			if (be < config.ref_energy[0] || be > config.ref_energy[1]) continue;
 			if (fe < config.norm_energy[0] || fe > config.norm_energy[1]) continue;
 			// fill to graph
-			ge[fs].AddPoint(fe, NormEnergy(parameters, 1, bs, be));
+			ge[fs].AddPoint(fe, parameters.NormEnergy(1, bs, be));
 		} else {
 			// jump if not reference strips
 			if (fs < config.ref[0]|| fs > config.ref[1]) continue;
@@ -104,7 +87,7 @@ int NormalizeStrips(
 		<< config.norm_energy[0] << ", " << config.norm_energy[1] << ", "
 		<< fe << ", " << be << ", " << fs << ", " << bs << "\n";*/
 			// fill to graph
-			ge[bs].AddPoint(be, NormEnergy(parameters, 0, fs, fe));
+			ge[bs].AddPoint(be, parameters.NormEnergy(0, fs, fe));
 		}
 	}
 	// show finish
@@ -127,12 +110,12 @@ int NormalizeStrips(
 			ge[i].Fit(&energy_fit, "QR+ ROB=0.8");
 			// store the normalized parameters
 			if (config.norm_side == 0) {
-				parameters.front_p0[i] = energy_fit.GetParameter(0);
-				parameters.front_p1[i] = energy_fit.GetParameter(1);
+				parameters.front_p0_[i] = energy_fit.GetParameter(0);
+				parameters.front_p1_[i] = energy_fit.GetParameter(1);
 				//parameters.front_p2[i] = energy_fit.GetParameter(2);
 			} else {
-				parameters.back_p0[i] = energy_fit.GetParameter(0);
-				parameters.back_p1[i] = energy_fit.GetParameter(1);
+				parameters.back_p0_[i] = energy_fit.GetParameter(0);
+				parameters.back_p1_[i] = energy_fit.GetParameter(1);
 				//parameters.back_p2[i] = energy_fit.GetParameter(2);
 			}
 		}
@@ -143,15 +126,15 @@ int NormalizeStrips(
 		// print normalized paramters on screen
 		if (side == 0) {
 			std::cout << i
-				<< " " << parameters.front_p0[i]
-				<< ", " << parameters.front_p1[i]
-				<< ", " << parameters.front_p2[i]
+				<< " " << parameters.front_p0_[i]
+				<< ", " << parameters.front_p1_[i]
+				<< ", " << parameters.front_p2_[i]
 				<< "\n";
 		} else {
 			std::cout << i
-				<< " " << parameters.back_p0[i]
-				<< ", " << parameters.back_p1[i]
-				<< ", " << parameters.back_p2[i]
+				<< " " << parameters.back_p0_[i]
+				<< ", " << parameters.back_p1_[i]
+				<< ", " << parameters.back_p2_[i]
 				<< "\n";
 		}
 	}
@@ -164,7 +147,7 @@ int NormalizeStrips(
 		double *gex = ge[i].GetX();
 		double *gey = ge[i].GetY();
 		for (int j = 0; j < point; ++j) {
-			res[i].AddPoint(gex[j], NormEnergy(parameters, side, i, gex[j])-gey[j]);
+			res[i].AddPoint(gex[j], parameters.NormEnergy(side, i, gex[j])-gey[j]);
 		}
 		res[i].Write(TString::Format("res%c%d", "fb"[side], i));
 	}
@@ -222,11 +205,11 @@ int main(int argc, char **argv) {
 	}
 
 	brill::AppConfig config;
-	if (brill::LoadConfig(result["config"].as<std::string>(), config)) {
+	if (config.Load(result["config"].as<std::string>())) {
 		return 1;
 	}
 	if (result.count("trigger")) {
-		config.trigger = result["trigger"].as<std::string>();
+		config.root_.trigger = result["trigger"].as<std::string>();
 	}
 	const int run = result["run"].as<int>();
 	const int end_run = result.count("end-run") ? result["end-run"].as<int>() : run;
@@ -237,7 +220,7 @@ int main(int argc, char **argv) {
 
 	for (const std::string &detector_name : detectors) {
 		const brill::SiliconDetectorConfig *detector =
-			brill::FindDetectorConfig(config, detector_name);
+			config.FindDetector(detector_name);
 		if (!detector) {
 			std::cerr << "Error: Detector " << detector_name << " is not found in config.\n";
 			return 1;
@@ -246,13 +229,13 @@ int main(int argc, char **argv) {
 		TChain chain("tree");
 		int added_runs = 0;
 		for (int current_run = run; current_run <= end_run; ++current_run) {
-			if (brill::IsJumpRun(config, current_run)) continue;
+			if (config.IsJumpRun(current_run)) continue;
 			++added_runs;
 			chain.Add(TString::Format(
 				"%s/%s_%s%04d.root",
-				brill::JoinPath(config.workspace, config.paths.ingot).c_str(),
+				brill::JoinPath(config.root_.workspace, config.paths_.ingot).c_str(),
 				detector_name.c_str(),
-				brill::TriggerInfix(config.trigger).c_str(),
+				brill::TriggerInfix(config.root_.trigger).c_str(),
 				current_run
 			));
 		}
@@ -260,61 +243,45 @@ int main(int argc, char **argv) {
 			std::cout << "No runs to process after jumping runs.\n";
 			return 0;
 		}
-		brill::DssdNormalizeParameters parameters;
-		parameters.front_strips = detector->front_strips;
-		parameters.back_strips = detector->back_strips;
-		for (int i = 0; i < parameters.front_strips; ++i) {
-			parameters.front_p0[i] = 0.0;
-			parameters.front_p1[i] = 1.0;
-			parameters.front_p2[i] = 0.0;
-		}
-		for (int i = 0; i < parameters.back_strips; ++i) {
-			parameters.back_p0[i] = 0.0;
-			parameters.back_p1[i] = 1.0;
-			parameters.back_p2[i] = 0.0;
-		}
+
+		brill::DssdNormalizeParameters parameters(detector->front_strips, detector->back_strips);
 
 		brill::DssdEvent raw_event;
 		brill::SetupInput(&chain, raw_event);
 
-		std::string normalize_dir = brill::JoinPath(config.workspace, config.paths.normalize);
+		std::string normalize_dir = brill::JoinPath(config.root_.workspace, config.paths_.normalize);
 		TString output_path = TString::Format(
 			"%s/%s_%s%04d_%04d.root",
 			normalize_dir.c_str(),
 			detector_name.c_str(),
-			brill::TriggerInfix(config.trigger).c_str(),
+			brill::TriggerInfix(config.root_.trigger).c_str(),
 			run,
 			end_run
 		);
 		TFile opf(output_path, "recreate");
 
-		const auto &strips_config = config.normalize.detectors[detector_name].strips;
+		const auto &strips_config = config.normalize_.detectors[detector_name].strips;
 
 		std::vector<bool> has_normalized;
-		for (int i = 0; i < parameters.front_strips + parameters.back_strips; ++i) {
+		for (int i = 0; i < parameters.front_strips_+parameters.back_strips_; ++i) {
 			has_normalized.push_back(false);
 		}
 
 		opf.cd();
 		for (const auto &strips : strips_config) {
-			NormalizeStrips(strips, detector->use_integral, chain, raw_event, parameters, has_normalized);
+			NormalizeStrips(
+				strips, detector->use_integral, chain, raw_event,
+				parameters, has_normalized
+			);
 		}
 
-		TString front_path = TString::Format(
-			"%s/%s_front_%04d.txt",
+		TString parameter_path = TString::Format(
+			"%s/%s_%04d.txt",
 			normalize_dir.c_str(),
 			detector_name.c_str(),
 			run
 		);
-		TString back_path = TString::Format(
-			"%s/%s_back_%04d.txt",
-			normalize_dir.c_str(),
-			detector_name.c_str(),
-			run
-		);
-		if (brill::WriteDssdNormalizeParameters(
-			front_path.Data(), back_path.Data(), parameters
-		)) {
+		if (parameters.Write(parameter_path.Data())) {
 			std::cerr << "Error: Write normalize parameters failed.\n";
 			return 1;
 		}
@@ -325,4 +292,3 @@ int main(int argc, char **argv) {
 
 	return 0;
 }
-

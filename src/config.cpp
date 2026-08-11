@@ -1,7 +1,6 @@
 #include "include/config.h"
 
 #include <iostream>
-#include <algorithm>
 
 #include "external/toml.hpp"
 
@@ -24,6 +23,29 @@ void LoadValue(
 	if (auto node = table[key].value<T>()) {
 		value = *node;
 	}
+}
+
+int LoadRoot(const toml::table &table, RootConfig &root) {
+	if (auto node = table["workspace"].value<std::string>()) {
+		root.workspace = *node;
+	} else {
+		std::cerr << "Error: Missing required key workspace.\n";
+		return -1;
+	}
+	if (auto node = table["trigger"].value<std::string>()) {
+		root.trigger = *node;
+	}
+	if (auto node = table["assets"].value<std::string>()) {
+		root.assets = *node;
+	}
+	if (const auto *jump_run = table["jump_run"].as_array()) {
+		for (size_t i = 0; i < jump_run->size(); ++i) {
+			if (auto value = (*jump_run)[i].value<int>()) {
+				root.jump_run.push_back(*value);
+			}
+		}
+	}
+	return 0;
 }
 
 void LoadPaths(const toml::table &table, AppPaths &paths) {
@@ -239,55 +261,36 @@ void LoadDetector(const toml::table &table, const std::string &name, SiliconDete
 
 } // namespace
 
-int LoadConfig(const std::string &path, AppConfig &config) {
+int AppConfig::Load(const std::string &path) {
 	try {
-		config = AppConfig();
+		*this = AppConfig();
 		toml::table table = toml::parse_file(path);
-		if (auto node = table["workspace"].value<std::string>()) {
-			config.workspace = *node;
-		} else {
-			std::cerr << "Error: Missing required key workspace in " << path << ".\n";
-			return -1;
+		if (LoadRoot(table, root_)) return -1;
+		if (const auto *paths_tbl = table["paths"].as_table()) {
+			LoadPaths(*paths_tbl, paths_);
 		}
-		if (auto node = table["trigger"].value<std::string>()) {
-			config.trigger = *node;
+		if (const auto *t0_tbl = table["t0"].as_table()) {
+			LoadT0(*t0_tbl, t0_);
 		}
-		if (auto node = table["assets"].value<std::string>()) {
-			config.assets = *node;
+		if (const auto *normalize_tbl = table["normalize"].as_table()) {
+			LoadNormalize(*normalize_tbl, normalize_);
 		}
-		if (const auto *jump_run = table["jump_run"].as_array()) {
-			for (size_t i = 0; i < jump_run->size(); ++i) {
-				if (auto value = (*jump_run)[i].value<int>()) {
-					config.jump_run.push_back(*value);
-				}
-			}
+		if (const auto *track_tbl = table["track"].as_table()) {
+			LoadTrack(*track_tbl, track_);
+		}
+		if (const auto *identify_tbl = table["identify"].as_table()) {
+			LoadIdentify(*identify_tbl, identify_);
 		}
 
-		if (const auto *paths = table["paths"].as_table()) {
-			LoadPaths(*paths, config.paths);
-		}
-		if (const auto *t0 = table["t0"].as_table()) {
-			LoadT0(*t0, config.t0);
-		}
-		if (const auto *normalize = table["normalize"].as_table()) {
-			LoadNormalize(*normalize, config.normalize);
-		}
-		if (const auto *track = table["track"].as_table()) {
-			LoadTrack(*track, config.track);
-		}
-		if (const auto *identify = table["identify"].as_table()) {
-			LoadIdentify(*identify, config.identify);
-		}
-
-		if (const auto *detectors = table["detectors"].as_table()) {
-			if (const auto *ppac = (*detectors)["ppac"].as_table()) {
-				LoadPpac(*ppac, config.ppac);
+		if (const auto *detectors_tbl = table["detectors"].as_table()) {
+			if (const auto *ppac_tbl = (*detectors_tbl)["ppac"].as_table()) {
+				LoadPpac(*ppac_tbl, ppac_);
 			}
 			for (const char *name : {"t0d1", "t0d2", "t0d3", "t0d4", "t0s"}) {
-				if (const auto *detector = (*detectors)[name].as_table()) {
+				if (const auto *detector_tbl = (*detectors_tbl)[name].as_table()) {
 					SiliconDetectorConfig config_detector;
-					LoadDetector(*detector, name, config_detector);
-					config.detectors[config_detector.name] = config_detector;
+					LoadDetector(*detector_tbl, name, config_detector);
+					detectors_[config_detector.name] = config_detector;
 				}
 			}
 		}
@@ -298,18 +301,19 @@ int LoadConfig(const std::string &path, AppConfig &config) {
 	return 0;
 }
 
-const SiliconDetectorConfig *FindDetectorConfig(const AppConfig &config, const std::string &name) {
-	auto iter = config.detectors.find(name);
-	if (iter == config.detectors.end()) return nullptr;
+const SiliconDetectorConfig* AppConfig::FindDetector(
+	const std::string &name
+) const {
+	auto iter = detectors_.find(name);
+	if (iter == detectors_.end()) return nullptr;
 	return &iter->second;
 }
 
-const StraightSliceConfig *FindStraightSliceConfig(
-	const AppConfig &config,
+const StraightSliceConfig* AppConfig::FindStraightSlice(
 	const std::string &name
-) {
-	auto iter = config.identify.straight.find(name);
-	if (iter == config.identify.straight.end()) return nullptr;
+) const {
+	auto iter = identify_.straight.find(name);
+	if (iter == identify_.straight.end()) return nullptr;
 	return &iter->second;
 }
 

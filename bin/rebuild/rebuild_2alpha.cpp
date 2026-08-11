@@ -25,8 +25,8 @@ void PrintUsage(const cxxopts::Options &options) {
 
 double SumDownstreamThickness(const brill::AppConfig &config) {
 	double thickness = 0.0;
-	for (size_t i = 1; i < config.t0.silicon.size(); ++i) {
-		const auto *detector = brill::FindDetectorConfig(config, config.t0.silicon[i]);
+	for (size_t i = 1; i < config.t0_.silicon.size(); ++i) {
+		const auto *detector = config.FindDetector(config.t0_.silicon[i]);
 		if (detector) thickness += detector->thickness_um;
 	}
 	return thickness;
@@ -136,13 +136,13 @@ int main(int argc, char **argv) {
 	}
 
 	brill::AppConfig config;
-	if (brill::LoadConfig(result["config"].as<std::string>(), config)) {
+	if (config.Load(result["config"].as<std::string>())) {
 		return 1;
 	}
 	if (result.count("trigger")) {
-		config.trigger = result["trigger"].as<std::string>();
+		config.root_.trigger = result["trigger"].as<std::string>();
 	}
-	brill::SetAssetsPath(config.assets);
+	brill::SetAssetsPath(config.root_.assets);
 
 	const int run = result["run"].as<int>();
 	const int end_run = result.count("end-run") ? result["end-run"].as<int>() : run;
@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	const auto *d1_detector = brill::FindDetectorConfig(config, "t0d1");
+	const auto *d1_detector = config.FindDetector("t0d1");
 	if (!d1_detector) {
 		std::cerr << "Error: Missing detector config for t0d1.\n";
 		return 1;
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
 		d1_detector->thickness_um,
 		TString::Format(
 			"%s/si_%.0fum_z2_a4.root",
-			brill::JoinPath(config.workspace, config.paths.energy_calculator).c_str(),
+			brill::JoinPath(config.root_.workspace, config.paths_.energy_calculator).c_str(),
 			d1_detector->thickness_um
 		).Data()
 	);
@@ -180,18 +180,18 @@ int main(int argc, char **argv) {
 		downstream_thickness,
 		TString::Format(
 			"%s/si_%.0fum_z2_a4.root",
-			brill::JoinPath(config.workspace, config.paths.energy_calculator).c_str(),
+			brill::JoinPath(config.root_.workspace, config.paths_.energy_calculator).c_str(),
 			downstream_thickness
 		).Data()
 	);
 
-	const std::string trigger_infix = brill::TriggerInfix(config.trigger);
-	const std::string particle_dir = brill::JoinPath(config.workspace, config.paths.particle);
+	const std::string trigger_infix = brill::TriggerInfix(config.root_.trigger);
+	const std::string particle_dir = brill::JoinPath(config.root_.workspace, config.paths_.particle);
 
 	TChain chain("tree");
 	int added_runs = 0;
 	for (int current_run = run; current_run <= end_run; ++current_run) {
-		if (brill::IsJumpRun(config, current_run)) continue;
+		if (config.IsJumpRun(current_run)) continue;
 		std::string path = TString::Format(
 			"%s/t0_%s%04d.root",
 			particle_dir.c_str(),
@@ -215,7 +215,7 @@ int main(int argc, char **argv) {
 
 	std::string output_path = TString::Format(
 		"%s/Be8_%s%04d_%04d.root",
-		brill::JoinPath(config.workspace, config.paths.spectrum).c_str(),
+		brill::JoinPath(config.root_.workspace, config.paths_.spectrum).c_str(),
 		trigger_infix.c_str(),
 		run,
 		end_run

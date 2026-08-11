@@ -45,11 +45,11 @@ int main(int argc, char **argv) {
 	}
 
 	brill::AppConfig config;
-	if (brill::LoadConfig(result["config"].as<std::string>(), config)) {
+	if (config.Load(result["config"].as<std::string>())) {
 		return 1;
 	}
 	if (result.count("trigger")) {
-		config.trigger = result["trigger"].as<std::string>();
+		config.root_.trigger = result["trigger"].as<std::string>();
 	}
 
 	const int run = result["run"].as<int>();
@@ -59,14 +59,14 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	const std::string ingot_dir = brill::JoinPath(config.workspace, config.paths.ingot);
-	const std::string trigger_infix = brill::TriggerInfix(config.trigger);
+	const std::string ingot_dir = brill::JoinPath(config.root_.workspace, config.paths_.ingot);
+	const std::string trigger_infix = brill::TriggerInfix(config.root_.trigger);
 
 	TChain chain_s("tree");
 	TChain chain_csi("tree");
 	int added_runs = 0;
 	for (int current_run = run; current_run <= end_run; ++current_run) {
-		if (brill::IsJumpRun(config, current_run)) continue;
+		if (config.IsJumpRun(current_run)) continue;
 		++added_runs;
 		chain_s.Add(TString::Format(
 			"%s/t0s_%s%04d.root",
@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
 
 	TString output_path = TString::Format(
 		"%s/t0csi_pid_%s%04d_%04d.root",
-		brill::JoinPath(config.workspace, config.paths.estimate).c_str(),
+		brill::JoinPath(config.root_.workspace, config.paths_.estimate).c_str(),
 		trigger_infix.c_str(),
 		run,
 		end_run
@@ -147,4 +147,3 @@ int main(int argc, char **argv) {
 
 	return 0;
 }
-

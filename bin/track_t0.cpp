@@ -575,14 +575,14 @@ int main(int argc, char **argv) {
 	}
 
 	brill::AppConfig config;
-	if (brill::LoadConfig(result["config"].as<std::string>(), config)) {
+	if (config.Load(result["config"].as<std::string>())) {
 		return 1;
 	}
 	if (result.count("trigger")) {
-		config.trigger = result["trigger"].as<std::string>();
+		config.root_.trigger = result["trigger"].as<std::string>();
 	}
 	const int run = result["run"].as<int>();
-	if (brill::IsJumpRun(config, run)) {
+	if (config.IsJumpRun(run)) {
 		std::cout << "Skipping jump run " << run << ".\n";
 		return 0;
 	}
@@ -597,44 +597,44 @@ int main(int argc, char **argv) {
 	std::vector<ParticleCutInfo> d4s_tail_cuts;
 	try {
 		BuildStoppedCuts(
-			config.workspace, "t0d1d2", kD1D2Particles,
+			config.root_.workspace, "t0d1d2", kD1D2Particles,
 			sizeof(kD1D2Particles) / sizeof(kD1D2Particles[0]), d1d2_stop_cuts
 		);
 		BuildStoppedCuts(
-			config.workspace, "t0d2d3", kD2D3Particles,
+			config.root_.workspace, "t0d2d3", kD2D3Particles,
 			sizeof(kD2D3Particles) / sizeof(kD2D3Particles[0]), d2d3_stop_cuts
 		);
 		BuildStoppedCuts(
-			config.workspace, "t0d3d4", kD3D4Particles,
+			config.root_.workspace, "t0d3d4", kD3D4Particles,
 			sizeof(kD3D4Particles) / sizeof(kD3D4Particles[0]), d3d4_stop_cuts
 		);
 		BuildStoppedCuts(
-			config.workspace, "t0d4s", kD4SParticles,
+			config.root_.workspace, "t0d4s", kD4SParticles,
 			sizeof(kD4SParticles) / sizeof(kD4SParticles[0]), d4s_stop_cuts
 		);
 		BuildTailCuts(
-			config.workspace, "t0d1d2", kD1D2Particles,
+			config.root_.workspace, "t0d1d2", kD1D2Particles,
 			sizeof(kD1D2Particles) / sizeof(kD1D2Particles[0]), d1d2_tail_cuts
 		);
 		BuildTailCuts(
-			config.workspace, "t0d2d3", kD2D3Particles,
+			config.root_.workspace, "t0d2d3", kD2D3Particles,
 			sizeof(kD2D3Particles) / sizeof(kD2D3Particles[0]), d2d3_tail_cuts
 		);
 		BuildTailCuts(
-			config.workspace, "t0d3d4", kD3D4Particles,
+			config.root_.workspace, "t0d3d4", kD3D4Particles,
 			sizeof(kD3D4Particles) / sizeof(kD3D4Particles[0]), d3d4_tail_cuts
 		);
 		BuildTailCuts(
-			config.workspace, "t0d4s", kD4SParticles,
+			config.root_.workspace, "t0d4s", kD4SParticles,
 			sizeof(kD4SParticles) / sizeof(kD4SParticles[0]), d4s_tail_cuts
 		);
 	} catch (const std::runtime_error &) {
 		return 1;
 	}
 
-	const std::string match_dir = brill::JoinPath(config.workspace, config.paths.match);
-	const std::string ingot_dir = brill::JoinPath(config.workspace, config.paths.ingot);
-	const std::string trigger_infix = brill::TriggerInfix(config.trigger);
+	const std::string match_dir = brill::JoinPath(config.root_.workspace, config.paths_.match);
+	const std::string ingot_dir = brill::JoinPath(config.root_.workspace, config.paths_.ingot);
+	const std::string trigger_infix = brill::TriggerInfix(config.root_.trigger);
 
 	TChain chain1("tree");
 	chain1.Add(TString::Format(
@@ -689,7 +689,7 @@ int main(int argc, char **argv) {
 
 	TString output_path = TString::Format(
 		"%s/t0_%s%04d.root",
-		brill::JoinPath(config.workspace, config.paths.track).c_str(),
+		brill::JoinPath(config.root_.workspace, config.paths_.track).c_str(),
 		trigger_infix.c_str(),
 		run
 	);
@@ -718,16 +718,16 @@ int main(int argc, char **argv) {
 
 		std::vector<Slice> slices[3];
 		BuildStoppedDssdDssdSlices(
-			d2_event, d3_event, config.track.d3d2_window, d2d3_stop_cuts, 0, slices[0]
+			d2_event, d3_event, config.track_.d3d2_window, d2d3_stop_cuts, 0, slices[0]
 		);
 		BuildTailDssdDssdSlices(
-			d2_event, d3_event, config.track.d3d2_window, d2d3_tail_cuts, 0, slices[0]
+			d2_event, d3_event, config.track_.d3d2_window, d2d3_tail_cuts, 0, slices[0]
 		);
 		BuildStoppedDssdDssdSlices(
-			d3_event, d4_event, config.track.d4d3_window, d3d4_stop_cuts, 1, slices[1]
+			d3_event, d4_event, config.track_.d4d3_window, d3d4_stop_cuts, 1, slices[1]
 		);
 		BuildTailDssdDssdSlices(
-			d3_event, d4_event, config.track.d4d3_window, d3d4_tail_cuts, 1, slices[1]
+			d3_event, d4_event, config.track_.d4d3_window, d3d4_tail_cuts, 1, slices[1]
 		);
 		BuildStoppedDssdSiliconSlices(d4_event, s_event, d4s_stop_cuts, 2, slices[2]);
 		BuildTailDssdSiliconSlices(d4_event, s_event, d4s_tail_cuts, 2, slices[2]);
@@ -777,7 +777,7 @@ int main(int argc, char **argv) {
 			for (int j = 0; j < d2_event.num; ++j) {
 				if (used_d2[j]) continue;
 				if (!InTrackWindow(
-					d1_event.x[i], d1_event.y[i], d2_event.x[j], d2_event.y[j], config.track.d2d1_window
+					d1_event.x[i], d1_event.y[i], d2_event.x[j], d2_event.y[j], config.track_.d2d1_window
 				)) {
 					continue;
 				}
@@ -829,7 +829,7 @@ int main(int argc, char **argv) {
 				if (!InTrackWindow(
 					d1_event.x[j], d1_event.y[j],
 					d2_event.x[particles[i].d2], d2_event.y[particles[i].d2],
-					config.track.d2d1_window
+					config.track_.d2d1_window
 				)) {
 					continue;
 				}
@@ -864,7 +864,7 @@ int main(int argc, char **argv) {
 				if (!InTrackWindow(
 					d1_event.x[j], d1_event.y[j],
 					d2_event.x[particles[i].d2], d2_event.y[particles[i].d2],
-					config.track.d2d1_window
+					config.track_.d2d1_window
 				)) {
 					continue;
 				}

@@ -162,11 +162,11 @@ int main(int argc, char **argv) {
 	}
 
 	brill::AppConfig config;
-	if (brill::LoadConfig(result["config"].as<std::string>(), config)) {
+	if (config.Load(result["config"].as<std::string>())) {
 		return 1;
 	}
 	if (result.count("trigger")) {
-		config.trigger = result["trigger"].as<std::string>();
+		config.root_.trigger = result["trigger"].as<std::string>();
 	}
 
 	const int run = result["run"].as<int>();
@@ -177,11 +177,11 @@ int main(int argc, char **argv) {
 	}
 
 	const brill::SiliconDetectorConfig *detectors[kLayerCount] = {
-		brill::FindDetectorConfig(config, "t0d1"),
-		brill::FindDetectorConfig(config, "t0d2"),
-		brill::FindDetectorConfig(config, "t0d3"),
-		brill::FindDetectorConfig(config, "t0d4"),
-		brill::FindDetectorConfig(config, "t0s")
+		config.FindDetector("t0d1"),
+		config.FindDetector("t0d2"),
+		config.FindDetector("t0d3"),
+		config.FindDetector("t0d4"),
+		config.FindDetector("t0s")
 	};
 	for (int i = 0; i < kLayerCount; ++i) {
 		if (!detectors[i]) {
@@ -191,13 +191,13 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	const std::string trigger_infix = brill::TriggerInfix(config.trigger);
-	const std::string track_dir = brill::JoinPath(config.workspace, config.paths.track);
+	const std::string trigger_infix = brill::TriggerInfix(config.root_.trigger);
+	const std::string track_dir = brill::JoinPath(config.root_.workspace, config.paths_.track);
 
 	TChain chain("tree");
 	int added_files = 0;
 	for (int current_run = run; current_run <= end_run; ++current_run) {
-		if (brill::IsJumpRun(config, current_run)) continue;
+		if (config.IsJumpRun(current_run)) continue;
 		std::string path = TString::Format(
 			"%s/t0_%s%04d.root",
 			track_dir.c_str(),
@@ -221,7 +221,7 @@ int main(int argc, char **argv) {
 
 	TString output_path = TString::Format(
 		"%s/t0_%s%04d_%04d.root",
-		brill::JoinPath(config.workspace, config.paths.calibration).c_str(),
+		brill::JoinPath(config.root_.workspace, config.paths_.calibration).c_str(),
 		trigger_infix.c_str(),
 		run,
 		end_run
@@ -299,7 +299,7 @@ int main(int argc, char **argv) {
 
 	output_path = TString::Format(
 		"%s/t0.txt",
-		brill::JoinPath(config.workspace, config.paths.calibration).c_str()
+		brill::JoinPath(config.root_.workspace, config.paths_.calibration).c_str()
 	).Data();
 	WriteCalibrationParameters(output_path, parameters);
 	// save graph

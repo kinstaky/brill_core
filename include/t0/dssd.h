@@ -1,6 +1,10 @@
 #pragma once
 
 #include <string>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <vector>
 
 #include "include/config.h"
 #include "include/event/ingot/dssd_event.h"
@@ -8,50 +12,30 @@
 
 namespace brill {
 
-struct DssdNormalizeParameters {
-	int front_strips = 0;
-	int back_strips = 0;
-	double front_p0[kMaxStrips] = {0.0};
-	double front_p1[kMaxStrips] = {1.0};
-	double front_p2[kMaxStrips] = {0.0};
-	double back_p0[kMaxStrips] = {0.0};
-	double back_p1[kMaxStrips] = {1.0};
-	double back_p2[kMaxStrips] = {0.0};
+class DssdNormalizeParameters {
+public:
+	DssdNormalizeParameters(const int front_strip, const int back_strip);
+	inline double NormEnergy(
+		const int side, const int strip, const double raw_energy
+	) const {
+		return side == 0
+			? front_p0_[strip] + front_p1_[strip] * raw_energy
+			: back_p0_[strip] + back_p1_[strip] * raw_energy;
+	}
+	int Write(const std::string &path) const;
+	int Read(const std::string &path);
+	void Apply(const DssdEvent &input, DssdEvent &output) const;
+
+	int front_strips_ = 0;
+	int back_strips_ = 0;
+	double front_p0_[kMaxStrips] = {0.0};
+	double front_p1_[kMaxStrips] = {1.0};
+	double front_p2_[kMaxStrips] = {0.0};
+	double back_p0_[kMaxStrips] = {0.0};
+	double back_p1_[kMaxStrips] = {1.0};
+	double back_p2_[kMaxStrips] = {0.0};
 };
 
-inline double NormEnergy(
-	const brill::DssdNormalizeParameters &parameters,
-	const int side,
-	const int strip,
-	const double raw_energy
-) {
-	if (side == 0) {
-		return
-			parameters.front_p0[strip]
-			+ parameters.front_p1[strip] * raw_energy;
-	}
-	return
-		parameters.back_p0[strip]
-		+ parameters.back_p1[strip] * raw_energy;
-}
-
-int WriteDssdNormalizeParameters(
-	const std::string &front_path,
-	const std::string &back_path,
-	const DssdNormalizeParameters &parameters
-);
-
-int ReadDssdNormalizeParameters(
-	const std::string &front_path,
-	const std::string &back_path,
-	DssdNormalizeParameters &parameters
-);
-
-void ApplyDssdNormalize(
-	const DssdEvent &input,
-	const DssdNormalizeParameters &parameters,
-	DssdEvent &output
-);
 
 void MatchDssdEvent(
 	const DssdEvent &input,

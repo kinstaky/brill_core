@@ -213,11 +213,11 @@ int main(int argc, char **argv) {
 	}
 
 	brill::AppConfig config;
-	if (brill::LoadConfig(result["config"].as<std::string>(), config)) {
+	if (config.Load(result["config"].as<std::string>())) {
 		return 1;
 	}
 	if (result.count("trigger")) {
-		config.trigger = result["trigger"].as<std::string>();
+		config.root_.trigger = result["trigger"].as<std::string>();
 	}
 
 	const int run = result["run"].as<int>();
@@ -230,7 +230,7 @@ int main(int argc, char **argv) {
 	std::vector<SliceStraightSpec> slices;
 	slices.push_back(MakeSlice(
 		"t0d1d2",
-		&config.track.d2d1_window,
+		&config.track_.d2d1_window,
 		false,
 		std::make_unique<TH2F>("d1d2", "D1-D2 PID", 5000, 0.0, 60000.0, 5000, 0.0, 30000.0),
 		std::make_unique<TH2F>("sd1d2", "D1-D2 straight PID", 5000, 0.0, 60000.0, 5000, 0.0, 60000.0),
@@ -240,7 +240,7 @@ int main(int argc, char **argv) {
 
 	slices.push_back(MakeSlice(
 		"t0d2d3",
-		&config.track.d3d2_window,
+		&config.track_.d3d2_window,
 		false,
 		std::make_unique<TH2F>("d2d3", "D2-D3 PID", 5000, 0.0, 50000.0, 5000, 0.0, 80000.0),
 		std::make_unique<TH2F>("sd2d3", "D2-D3 straight PID", 5000, 0.0, 50000.0, 5000, 0.0, 50000.0),
@@ -252,7 +252,7 @@ int main(int argc, char **argv) {
 
 	slices.push_back(MakeSlice(
 		"t0d3d4",
-		&config.track.d4d3_window,
+		&config.track_.d4d3_window,
 		false,
 		std::make_unique<TH2F>("d3d4", "D3-D4 PID", 5000, 0.0, 45000.0, 5000, 0.0, 45000.0),
 		std::make_unique<TH2F>("sd3d4", "D3-D4 straight PID", 5000, 0.0, 45000.0, 5000, 0.0, 45000.0),
@@ -277,7 +277,7 @@ int main(int argc, char **argv) {
 	for (auto &slice : slices) {
 		for (auto &particle : slice.particles) {
 			if (brill::ParseCutFile(
-				config.workspace,
+				config.root_.workspace,
 				slice.key,
 				particle.particle,
 				particle.tail,
@@ -288,9 +288,9 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	const std::string match_dir = brill::JoinPath(config.workspace, config.paths.match);
-	const std::string ingot_dir = brill::JoinPath(config.workspace, config.paths.ingot);
-	const std::string trigger_infix = brill::TriggerInfix(config.trigger);
+	const std::string match_dir = brill::JoinPath(config.root_.workspace, config.paths_.match);
+	const std::string ingot_dir = brill::JoinPath(config.root_.workspace, config.paths_.ingot);
+	const std::string trigger_infix = brill::TriggerInfix(config.root_.trigger);
 
 	TChain chain1("tree");
 	TChain chain2("tree");
@@ -299,7 +299,7 @@ int main(int argc, char **argv) {
 	TChain chain_s("tree");
 	int added_runs = 0;
 	for (int current_run = run; current_run <= end_run; ++current_run) {
-		if (brill::IsJumpRun(config, current_run)) continue;
+		if (config.IsJumpRun(current_run)) continue;
 		++added_runs;
 		chain1.Add(TString::Format(
 			"%s/t0d1_%s%04d.root",
@@ -355,7 +355,7 @@ int main(int argc, char **argv) {
 
 	TString output_path = TString::Format(
 		"%s/t0_straight_%s%04d_%04d.root",
-		brill::JoinPath(config.workspace, config.paths.estimate).c_str(),
+		brill::JoinPath(config.root_.workspace, config.paths_.estimate).c_str(),
 		trigger_infix.c_str(),
 		run,
 		end_run
@@ -374,13 +374,13 @@ int main(int argc, char **argv) {
 			std::fflush(stdout);
 		}
 		chain1.GetEntry(entry);
-		HandleDssdPairs(event1, event2, config.track.d2d1_window, [&](double e, double de) {
+		HandleDssdPairs(event1, event2, config.track_.d2d1_window, [&](double e, double de) {
 			FillGraphsForPoint(slices[0], e, de);
 		});
-		HandleDssdPairs(event2, event3, config.track.d3d2_window, [&](double e, double de) {
+		HandleDssdPairs(event2, event3, config.track_.d3d2_window, [&](double e, double de) {
 			FillGraphsForPoint(slices[1], e, de);
 		});
-		HandleDssdPairs(event3, event4, config.track.d4d3_window, [&](double e, double de) {
+		HandleDssdPairs(event3, event4, config.track_.d4d3_window, [&](double e, double de) {
 			FillGraphsForPoint(slices[2], e, de);
 		});
 		HandleSiliconPairs(event4, event_s, [&](double e, double de) {
@@ -413,13 +413,13 @@ int main(int argc, char **argv) {
 			std::fflush(stdout);
 		}
 		chain1.GetEntry(entry);
-		HandleDssdPairs(event1, event2, config.track.d2d1_window, [&](double e, double de) {
+		HandleDssdPairs(event1, event2, config.track_.d2d1_window, [&](double e, double de) {
 			FillStraightPoint(slices[0], e, de);
 		});
-		HandleDssdPairs(event2, event3, config.track.d3d2_window, [&](double e, double de) {
+		HandleDssdPairs(event2, event3, config.track_.d3d2_window, [&](double e, double de) {
 			FillStraightPoint(slices[1], e, de);
 		});
-		HandleDssdPairs(event3, event4, config.track.d4d3_window, [&](double e, double de) {
+		HandleDssdPairs(event3, event4, config.track_.d4d3_window, [&](double e, double de) {
 			FillStraightPoint(slices[2], e, de);
 		});
 		HandleSiliconPairs(event4, event_s, [&](double e, double de) {

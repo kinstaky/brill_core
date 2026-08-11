@@ -2,20 +2,10 @@
 
 #include <algorithm>
 #include <cmath>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <vector>
 
 namespace brill {
 
 namespace {
-
-struct Hit {
-	int strip = 0;
-	double energy = 0.0;
-	double time = 0.0;
-};
 
 struct MatchCandidate {
 	int front_index = -1;
@@ -26,90 +16,6 @@ struct MatchCandidate {
 	double time = 0.0;
 	int merge_tag = 0;
 };
-
-double NormalizeEnergy(double raw_energy, double p0, double p1, double p2) {
-	return p0 + p1 * raw_energy + p2 * raw_energy * raw_energy;
-}
-
-int ReadOneSide(
-	const std::string &path,
-	int strips,
-	double *p0,
-	double *p1,
-	double *p2
-) {
-	std::ifstream fin(path);
-	if (!fin.good()) {
-		std::cerr << "Error: Open normalize parameter file " << path << " failed.\n";
-		return -1;
-	}
-
-	std::string line;
-	if (!std::getline(fin, line)) {
-		std::cerr << "Error: Read header from " << path << " failed.\n";
-		return -1;
-	}
-
-	while (std::getline(fin, line)) {
-		if (line.empty()) continue;
-		std::istringstream iss(line);
-		int index = -1;
-		double value0 = 0.0;
-		double value1 = 0.0;
-		double value2 = 0.0;
-		if (!(iss >> index >> value0 >> value1 >> value2)) continue;
-		if (index < 0 || index >= strips) {
-			std::cerr << "Error: Strip index " << index
-				<< " out of range in " << path << ".\n";
-			return -1;
-		}
-		p0[index] = value0;
-		p1[index] = value1;
-		p2[index] = value2;
-	}
-	return 0;
-}
-
-int WriteOneSide(
-	const std::string &path,
-	int strips,
-	const double *p0,
-	const double *p1,
-	const double *p2
-) {
-	std::ofstream fout(path);
-	if (!fout.good()) {
-		std::cerr << "Error: Open output normalize parameter file " << path << " failed.\n";
-		return -1;
-	}
-	fout << "strip p0 p1 p2\n";
-	for (int i = 0; i < strips; ++i) {
-		fout << i << " " << p0[i] << " " << p1[i] << " " << p2[i] << "\n";
-	}
-	return 0;
-}
-
-void SortHits(const int num, int *strip, double *energy, double *time) {
-	if (num <= 0 || num > 8) return;
-	Hit hits[16];
-	for (int i = 0; i < num; ++i) {
-		hits[i].strip = strip[i];
-		hits[i].energy = energy[i];
-		hits[i].time = time[i];
-	}
-	std::sort(
-		hits,
-		hits+num,
-		[](const Hit &left, const Hit &right) {
-			return left.energy > right.energy;
-		}
-	);
-	for (int i = 0; i < num; ++i) {
-		strip[i] = hits[i].strip;
-		energy[i] = hits[i].energy;
-		time[i] = hits[i].time;
-	}
-}
 
 double StripPosition(double center, double size, int strips, double strip) {
 	return center + size * ((strip + 0.5) / double(strips) - 0.5);
@@ -216,84 +122,126 @@ void AppendMatch(
 
 } // namespace
 
-int WriteDssdNormalizeParameters(
-	const std::string &front_path,
-	const std::string &back_path,
-	const DssdNormalizeParameters &parameters
+DssdNormalizeParameters::DssdNormalizeParameters(
+	const int front_strips,
+	const int back_strips
 ) {
-	if (WriteOneSide(
-		front_path,
-		parameters.front_strips,
-		parameters.front_p0,
-		parameters.front_p1,
-		parameters.front_p2
-	)) {
+	front_strips_ = front_strips;
+	back_strips_ = back_strips;
+}
+
+int DssdNormalizeParameters::Write(const std::string &path) const {
+	std::ofstream fout(path);
+	if (!fout.good()) {
+		std::cerr << "Error: Open output normalize parameter file " << path << " failed.\n";
 		return -1;
 	}
-	if (WriteOneSide(
-		back_path,
-		parameters.back_strips,
-		parameters.back_p0,
-		parameters.back_p1,
-		parameters.back_p2
-	)) {
-		return -1;
+	fout << "side strip p0 p1 p2\n";
+	// front
+	for (int i = 0; i < front_strips_; ++i) {
+		fout << "0 " << i << " "
+			<< front_p0_[i] << " "
+			<< front_p1_[i] << " "
+			<< front_p2_[i] << "\n";
+	}
+	// back
+	for (int i = 0; i < back_strips_; ++i) {
+		fout << "1 " << i << " "
+			<< back_p0_[i] << " "
+			<< back_p1_[i] << " "
+			<< back_p2_[i] << "\n";
 	}
 	return 0;
 }
 
-int ReadDssdNormalizeParameters(
-	const std::string &front_path,
-	const std::string &back_path,
-	DssdNormalizeParameters &parameters
-) {
-	if (ReadOneSide(
-		front_path,
-		parameters.front_strips,
-		parameters.front_p0,
-		parameters.front_p1,
-		parameters.front_p2
-	)) {
+int DssdNormalizeParameters::Read(const std::string &path) {
+	std::ifstream fin(path);
+	if (!fin.good()) {
+		std::cerr << "Error: Open normalize parameter file " << path << " failed.\n";
 		return -1;
 	}
-	if (ReadOneSide(
-		back_path,
-		parameters.back_strips,
-		parameters.back_p0,
-		parameters.back_p1,
-		parameters.back_p2
-	)) {
+
+	std::string line;
+	if (!std::getline(fin, line)) {
+		std::cerr << "Error: Read header from " << path << " failed.\n";
 		return -1;
+	}
+
+	while (std::getline(fin, line)) {
+		if (line.empty()) continue;
+		std::istringstream iss(line);
+		int side = -1;
+		int strip = -1;
+		double value0 = 0.0;
+		double value1 = 0.0;
+		double value2 = 0.0;
+		if (!(iss >> side >> strip >> value0 >> value1 >> value2)) continue;
+		if (strip < 0 || strip >= (side == 0 ? front_strips_ : back_strips_)) {
+			std::cerr << "Error: Side " << side << " strip " << strip
+				<< " out of range in " << path << ".\n";
+			return -1;
+		}
+		if (side == 0) {
+			front_p0_[strip] = value0;
+			front_p1_[strip] = value1;
+			front_p2_[strip] = value2;
+		} else {
+			back_p0_[strip] = value0;
+			back_p1_[strip] = value1;
+			back_p2_[strip] = value2;
+		}
 	}
 	return 0;
 }
 
-void ApplyDssdNormalize(
+
+struct Hit {
+	int strip = 0;
+	double energy = 0.0;
+	double time = 0.0;
+};
+
+void SortHits(const int num, int *strip, double *energy, double *time) {
+	if (num <= 0 || num > 8) return;
+	Hit hits[16];
+	for (int i = 0; i < num; ++i) {
+		hits[i].strip = strip[i];
+		hits[i].energy = energy[i];
+		hits[i].time = time[i];
+	}
+	std::sort(
+		hits,
+		hits+num,
+		[](const Hit &left, const Hit &right) {
+			return left.energy > right.energy;
+		}
+	);
+	for (int i = 0; i < num; ++i) {
+		strip[i] = hits[i].strip;
+		energy[i] = hits[i].energy;
+		time[i] = hits[i].time;
+	}
+}
+
+void DssdNormalizeParameters::Apply(
 	const DssdEvent &input,
-	const DssdNormalizeParameters &parameters,
 	DssdEvent &output
-) {
+) const {
 	output.front_num = input.front_num;
 	output.back_num = input.back_num;
 	for (int i = 0; i < input.front_num; ++i) {
 		int strip = input.front_strip[i];
 		output.front_strip[i] = strip;
-		output.front_energy[i] = NormalizeEnergy(
-			input.front_energy[i],
-			parameters.front_p0[strip],
-			parameters.front_p1[strip],
-			parameters.front_p2[strip]
+		output.front_energy[i] = NormEnergy(
+			0, strip, input.front_energy[i]
 		);
 		output.front_time[i] = input.front_time[i];
 	}
 	for (int i = 0; i < input.back_num; ++i) {
 		int strip = input.back_strip[i];
 		output.back_strip[i] = strip;
-		output.back_energy[i] = NormalizeEnergy(
-			input.back_energy[i],
-			parameters.back_p0[strip],
-			parameters.back_p1[strip],
-			parameters.back_p2[strip]
+		output.back_energy[i] = NormEnergy(
+			1, strip, input.back_energy[i]
 		);
 		output.back_time[i] = input.back_time[i];
 	}

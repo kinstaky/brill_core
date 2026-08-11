@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
@@ -95,30 +96,32 @@ struct AppPaths {
 	std::string energy_calculator = "energy_calculator";
 };
 
-struct AppConfig {
+struct RootConfig {
 	std::string workspace = "/data/";
 	std::string trigger = "";
 	std::string assets = "assets";
 	std::vector<int> jump_run;
-	AppPaths paths;
-	T0Config t0;
-	NormalizeConfig normalize;
-	TrackConfig track;
-	IdentifyConfig identify;
-	PpacConfig ppac;
-	std::map<std::string, SiliconDetectorConfig> detectors;
 };
 
-int LoadConfig(const std::string &path, AppConfig &config);
+class AppConfig {
+public:
+	AppConfig() = default;
 
-const SiliconDetectorConfig *FindDetectorConfig(
-	const AppConfig &config,
-	const std::string &name
-);
+	int Load(const std::string &path);
+	const SiliconDetectorConfig *FindDetector(const std::string &name) const;
+	const StraightSliceConfig *FindStraightSlice(const std::string &name) const;
+	inline bool IsJumpRun(int run) const {
+		return std::find(root_.jump_run.begin(), root_.jump_run.end(), run) != root_.jump_run.end();
+	}
 
-const StraightSliceConfig *FindStraightSliceConfig(
-	const AppConfig &config,
-	const std::string &name
-);
+	RootConfig root_;
+	AppPaths paths_;
+	T0Config t0_;
+	NormalizeConfig normalize_;
+	TrackConfig track_;
+	IdentifyConfig identify_;
+	PpacConfig ppac_;
+	std::map<std::string, SiliconDetectorConfig> detectors_;
+};
 
 } // namespace brill
