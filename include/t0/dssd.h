@@ -14,26 +14,26 @@ namespace brill {
 
 class DssdNormalizeParameters {
 public:
-	DssdNormalizeParameters(const int front_strip, const int back_strip);
+	DssdNormalizeParameters(const int fs, const int bs);
 	inline double NormEnergy(
 		const int side, const int strip, const double raw_energy
 	) const {
 		return side == 0
-			? front_p0_[strip] + front_p1_[strip] * raw_energy
-			: back_p0_[strip] + back_p1_[strip] * raw_energy;
+			? front_p0[strip] + front_p1[strip] * raw_energy
+			: back_p0[strip] + back_p1[strip] * raw_energy;
 	}
 	int Write(const std::string &path) const;
 	int Read(const std::string &path);
 	void Apply(const DssdEvent &input, DssdEvent &output) const;
 
-	int front_strips_ = 0;
-	int back_strips_ = 0;
-	double front_p0_[kMaxStrips] = {0.0};
-	double front_p1_[kMaxStrips] = {1.0};
-	double front_p2_[kMaxStrips] = {0.0};
-	double back_p0_[kMaxStrips] = {0.0};
-	double back_p1_[kMaxStrips] = {1.0};
-	double back_p2_[kMaxStrips] = {0.0};
+	int front_strips = 0;
+	int back_strips = 0;
+	double front_p0[kMaxStrips] = {0.0};
+	double front_p1[kMaxStrips] = {1.0};
+	double front_p2[kMaxStrips] = {0.0};
+	double back_p0[kMaxStrips] = {0.0};
+	double back_p1[kMaxStrips] = {1.0};
+	double back_p2[kMaxStrips] = {0.0};
 };
 
 

@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	if (result.count("trigger")) {
-		config.root_.trigger = result["trigger"].as<std::string>();
+		config.root.trigger = result["trigger"].as<std::string>();
 	}
 
 	const int run = result["run"].as<int>();
@@ -104,9 +104,9 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	const std::string match_dir = brill::JoinPath(config.root_.workspace, config.paths_.match);
-	const std::string ingot_dir = brill::JoinPath(config.root_.workspace, config.paths_.ingot);
-	const std::string trigger_infix = brill::TriggerInfix(config.root_.trigger);
+	const std::string match_dir = brill::JoinPath(config.root.workspace, config.paths.match);
+	const std::string ingot_dir = brill::JoinPath(config.root.workspace, config.paths.ingot);
+	const std::string trigger_infix = brill::TriggerInfix(config.root.trigger);
 
 	TChain chain1("tree");
 	TChain chain2("tree");
@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
 
 	TString output_path = TString::Format(
 		"%s/t0_pid_%s%04d_%04d.root",
-		brill::JoinPath(config.root_.workspace, config.paths_.estimate).c_str(),
+		brill::JoinPath(config.root.workspace, config.paths.estimate).c_str(),
 		trigger_infix.c_str(),
 		run,
 		end_run
@@ -193,9 +193,9 @@ int main(int argc, char **argv) {
 			std::fflush(stdout);
 		}
 		chain1.GetEntry(entry);
-		FillPairPid(event1, event2, config.track_.d2d1_window, d1d2_pid);
-		FillPairPid(event2, event3, config.track_.d3d2_window, d2d3_pid);
-		FillPairPid(event3, event4, config.track_.d4d3_window, d3d4_pid);
+		FillPairPid(event1, event2, config.track.d2d1_window, d1d2_pid);
+		FillPairPid(event2, event3, config.track.d3d2_window, d2d3_pid);
+		FillPairPid(event3, event4, config.track.d4d3_window, d3d4_pid);
 		FillSiliconPid(event4, event_s, d4s_pid);
 	}
 	std::printf("\b\b\b\b100%%\n");

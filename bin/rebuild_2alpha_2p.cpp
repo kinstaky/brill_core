@@ -400,7 +400,7 @@ const brill::LostEnergyCalculator *GetLayerCalculator(
 			thickness_um,
 			TString::Format(
 				"%s/si_%.0fum_z%d_a%d.root",
-				brill::JoinPath(config.root_.workspace, config.paths_.energy_calculator).c_str(),
+				brill::JoinPath(config.root.workspace, config.paths.energy_calculator).c_str(),
 				thickness_um,
 				charge,
 				mass
@@ -603,12 +603,12 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	if (result.count("trigger")) {
-		config.root_.trigger = result["trigger"].as<std::string>();
+		config.root.trigger = result["trigger"].as<std::string>();
 	}
-	brill::SetAssetsPath(config.root_.assets);
+	brill::SetAssetsPath(config.root.assets);
 	const std::string calibration_path = TString::Format(
 		"%s/t0.txt",
-		brill::JoinPath(config.root_.workspace, config.paths_.calibration).c_str()
+		brill::JoinPath(config.root.workspace, config.paths.calibration).c_str()
 	).Data();
 	CalibrationParameters calibration;
 	if (ReadCalibrationParameters(calibration_path, calibration)) {
@@ -641,28 +641,28 @@ int main(int argc, char **argv) {
 	std::vector<CutInfo> d2d3_cuts;
 	std::vector<CutInfo> d3d4_cuts;
 	CutInfo cut;
-	if (BuildCut(config.root_.workspace, "t0d2d3", "4He", false, true, cut)) return 1;
+	if (BuildCut(config.root.workspace, "t0d2d3", "4He", false, true, cut)) return 1;
 	d2d3_cuts.push_back(std::move(cut));
-	if (BuildCut(config.root_.workspace, "t0d2d3", "4He", true, true, cut)) return 1;
+	if (BuildCut(config.root.workspace, "t0d2d3", "4He", true, true, cut)) return 1;
 	d2d3_cuts.push_back(std::move(cut));
-	int proton_d2d3_stop = BuildCut(config.root_.workspace, "t0d2d3", "1H", false, false, cut);
+	int proton_d2d3_stop = BuildCut(config.root.workspace, "t0d2d3", "1H", false, false, cut);
 	if (proton_d2d3_stop < 0) return 1;
 	if (proton_d2d3_stop == 0) d2d3_cuts.push_back(std::move(cut));
-	int proton_d2d3_tail = BuildCut(config.root_.workspace, "t0d2d3", "1H", true, false, cut);
+	int proton_d2d3_tail = BuildCut(config.root.workspace, "t0d2d3", "1H", true, false, cut);
 	if (proton_d2d3_tail < 0) return 1;
 	if (proton_d2d3_tail == 0) d2d3_cuts.push_back(std::move(cut));
 
-	if (BuildCut(config.root_.workspace, "t0d3d4", "4He", false, true, cut)) return 1;
+	if (BuildCut(config.root.workspace, "t0d3d4", "4He", false, true, cut)) return 1;
 	d3d4_cuts.push_back(std::move(cut));
-	if (BuildCut(config.root_.workspace, "t0d3d4", "4He", true, true, cut)) return 1;
+	if (BuildCut(config.root.workspace, "t0d3d4", "4He", true, true, cut)) return 1;
 	d3d4_cuts.push_back(std::move(cut));
-	if (BuildCut(config.root_.workspace, "t0d3d4", "1H", false, true, cut)) return 1;
+	if (BuildCut(config.root.workspace, "t0d3d4", "1H", false, true, cut)) return 1;
 	d3d4_cuts.push_back(std::move(cut));
-	if (BuildCut(config.root_.workspace, "t0d3d4", "1H", true, true, cut)) return 1;
+	if (BuildCut(config.root.workspace, "t0d3d4", "1H", true, true, cut)) return 1;
 	d3d4_cuts.push_back(std::move(cut));
 
-	const std::string match_dir = brill::JoinPath(config.root_.workspace, config.paths_.match);
-	const std::string trigger_infix = brill::TriggerInfix(config.root_.trigger);
+	const std::string match_dir = brill::JoinPath(config.root.workspace, config.paths.match);
+	const std::string trigger_infix = brill::TriggerInfix(config.root.trigger);
 
 	TChain chain2("tree");
 	TChain chain3("tree");
@@ -717,7 +717,7 @@ int main(int argc, char **argv) {
 
 	std::string output_path = TString::Format(
 		"%s/t0_2a2p_%s%04d_%04d.root",
-		brill::JoinPath(config.root_.workspace, config.paths_.particle).c_str(),
+		brill::JoinPath(config.root.workspace, config.paths.particle).c_str(),
 		trigger_infix.c_str(),
 		run,
 		end_run

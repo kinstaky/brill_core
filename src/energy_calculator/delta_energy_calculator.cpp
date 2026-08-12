@@ -31,7 +31,7 @@ int CollectSiliconDetectors(
 	std::vector<double> &thickness
 ) {
 	thickness.clear();
-	for (const auto &name : config.t0_.silicon) {
+	for (const auto &name : config.t0.silicon) {
 		const auto *detector = config.FindDetector(name);
 		if (!detector) {
 			std::cerr << "Error: T0 silicon detector " << name << " not found in config.\n";
@@ -53,7 +53,7 @@ std::string RangeCachePath(
 ) {
 	return TString::Format(
 		"%s/si_z%d_a%d.root",
-		brill::JoinPath(config.root_.workspace, config.paths_.energy_calculator).c_str(),
+		brill::JoinPath(config.root.workspace, config.paths.energy_calculator).c_str(),
 		charge,
 		mass
 	).Data();
@@ -132,7 +132,7 @@ int DeltaEnergyCalculator::Initialize(
 	std::filesystem::path path(
 		TString::Format(
 			"%s/t0_delta_z%d_a%d.root",
-			JoinPath(config.root_.workspace, config.paths_.energy_calculator).c_str(),
+			JoinPath(config.root.workspace, config.paths.energy_calculator).c_str(),
 			charge,
 			mass
 		).Data()
@@ -237,7 +237,7 @@ int DeltaEnergyCalculator::Load(const AppConfig &config) {
 std::string DeltaEnergyCalculator::CachePath(const AppConfig &config) const {
 	return TString::Format(
 		"%s/t0_delta_z%d_a%d.root",
-		JoinPath(config.root_.workspace, config.paths_.energy_calculator).c_str(),
+		JoinPath(config.root.workspace, config.paths.energy_calculator).c_str(),
 		charge_,
 		mass_
 	).Data();

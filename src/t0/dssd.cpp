@@ -123,12 +123,9 @@ void AppendMatch(
 } // namespace
 
 DssdNormalizeParameters::DssdNormalizeParameters(
-	const int front_strips,
-	const int back_strips
-) {
-	front_strips_ = front_strips;
-	back_strips_ = back_strips;
-}
+	const int fs,
+	const int bs
+): front_strips(fs), back_strips(bs) {}
 
 int DssdNormalizeParameters::Write(const std::string &path) const {
 	std::ofstream fout(path);
@@ -138,18 +135,18 @@ int DssdNormalizeParameters::Write(const std::string &path) const {
 	}
 	fout << "side strip p0 p1 p2\n";
 	// front
-	for (int i = 0; i < front_strips_; ++i) {
+	for (int i = 0; i < front_strips; ++i) {
 		fout << "0 " << i << " "
-			<< front_p0_[i] << " "
-			<< front_p1_[i] << " "
-			<< front_p2_[i] << "\n";
+			<< front_p0[i] << " "
+			<< front_p1[i] << " "
+			<< front_p2[i] << "\n";
 	}
 	// back
-	for (int i = 0; i < back_strips_; ++i) {
+	for (int i = 0; i < back_strips; ++i) {
 		fout << "1 " << i << " "
-			<< back_p0_[i] << " "
-			<< back_p1_[i] << " "
-			<< back_p2_[i] << "\n";
+			<< back_p0[i] << " "
+			<< back_p1[i] << " "
+			<< back_p2[i] << "\n";
 	}
 	return 0;
 }
@@ -176,19 +173,19 @@ int DssdNormalizeParameters::Read(const std::string &path) {
 		double value1 = 0.0;
 		double value2 = 0.0;
 		if (!(iss >> side >> strip >> value0 >> value1 >> value2)) continue;
-		if (strip < 0 || strip >= (side == 0 ? front_strips_ : back_strips_)) {
+		if (strip < 0 || strip >= (side == 0 ? front_strips : back_strips)) {
 			std::cerr << "Error: Side " << side << " strip " << strip
 				<< " out of range in " << path << ".\n";
 			return -1;
 		}
 		if (side == 0) {
-			front_p0_[strip] = value0;
-			front_p1_[strip] = value1;
-			front_p2_[strip] = value2;
+			front_p0[strip] = value0;
+			front_p1[strip] = value1;
+			front_p2[strip] = value2;
 		} else {
-			back_p0_[strip] = value0;
-			back_p1_[strip] = value1;
-			back_p2_[strip] = value2;
+			back_p0[strip] = value0;
+			back_p1[strip] = value1;
+			back_p2[strip] = value2;
 		}
 	}
 	return 0;

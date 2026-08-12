@@ -111,17 +111,17 @@ public:
 	const SiliconDetectorConfig *FindDetector(const std::string &name) const;
 	const StraightSliceConfig *FindStraightSlice(const std::string &name) const;
 	inline bool IsJumpRun(int run) const {
-		return std::find(root_.jump_run.begin(), root_.jump_run.end(), run) != root_.jump_run.end();
+		return std::find(root.jump_run.begin(), root.jump_run.end(), run) != root.jump_run.end();
 	}
 
-	RootConfig root_;
-	AppPaths paths_;
-	T0Config t0_;
-	NormalizeConfig normalize_;
-	TrackConfig track_;
-	IdentifyConfig identify_;
-	PpacConfig ppac_;
-	std::map<std::string, SiliconDetectorConfig> detectors_;
+	RootConfig root;
+	AppPaths paths;
+	T0Config t0;
+	NormalizeConfig normalize;
+	TrackConfig track;
+	IdentifyConfig identify;
+	PpacConfig ppac;
+	std::map<std::string, SiliconDetectorConfig> detectors;
 };
 
 } // namespace brill

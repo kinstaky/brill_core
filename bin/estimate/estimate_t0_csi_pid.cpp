@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	if (result.count("trigger")) {
-		config.root_.trigger = result["trigger"].as<std::string>();
+		config.root.trigger = result["trigger"].as<std::string>();
 	}
 
 	const int run = result["run"].as<int>();
@@ -59,8 +59,10 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	const std::string ingot_dir = brill::JoinPath(config.root_.workspace, config.paths_.ingot);
-	const std::string trigger_infix = brill::TriggerInfix(config.root_.trigger);
+	const std::string ingot_dir = brill::JoinPath(
+		config.root.workspace, config.paths.ingot
+	);
+	const std::string trigger_infix = brill::TriggerInfix(config.root.trigger);
 
 	TChain chain_s("tree");
 	TChain chain_csi("tree");
@@ -94,7 +96,7 @@ int main(int argc, char **argv) {
 
 	TString output_path = TString::Format(
 		"%s/t0csi_pid_%s%04d_%04d.root",
-		brill::JoinPath(config.root_.workspace, config.paths_.estimate).c_str(),
+		brill::JoinPath(config.root.workspace, config.paths.estimate).c_str(),
 		trigger_infix.c_str(),
 		run,
 		end_run

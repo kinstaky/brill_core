@@ -108,7 +108,7 @@ std::string RangeCachePath(
 ) {
 	return TString::Format(
 		"%s/si_z%d_a%d.root",
-		brill::JoinPath(config.root_.workspace, config.paths_.energy_calculator).c_str(),
+		brill::JoinPath(config.root.workspace, config.paths.energy_calculator).c_str(),
 		charge,
 		mass
 	).Data();
@@ -130,12 +130,12 @@ double MaximumStopEnergy(
 	if (
 		stop_layer < kFirstStopLayer
 		|| stop_layer > kLastStopLayer
-		|| size_t(stop_layer - 1) >= config.t0_.silicon.size()
+		|| size_t(stop_layer - 1) >= config.t0.silicon.size()
 	) {
 		return 0.0;
 	}
 
-	const std::string &detector_name = config.t0_.silicon[stop_layer - 1];
+	const std::string &detector_name = config.t0.silicon[stop_layer - 1];
 	const auto *detector = config.FindDetector(detector_name);
 	if (!detector) {
 		std::cerr
@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	if (result.count("trigger")) {
-		config.root_.trigger = result["trigger"].as<std::string>();
+		config.root.trigger = result["trigger"].as<std::string>();
 	}
 
 	const int run = result["run"].as<int>();
@@ -204,20 +204,20 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
-	const std::string trigger_infix = brill::TriggerInfix(config.root_.trigger);
+	const std::string trigger_infix = brill::TriggerInfix(config.root.trigger);
 	const std::string track_path = TString::Format(
 		"%s/t0_%s%04d.root",
-		brill::JoinPath(config.root_.workspace, config.paths_.track).c_str(),
+		brill::JoinPath(config.root.workspace, config.paths.track).c_str(),
 		trigger_infix.c_str(),
 		run
 	).Data();
 	const std::string calibration_path = TString::Format(
 		"%s/t0.txt",
-		brill::JoinPath(config.root_.workspace, config.paths_.calibration).c_str()
+		brill::JoinPath(config.root.workspace, config.paths.calibration).c_str()
 	).Data();
 	const std::string output_path = TString::Format(
 		"%s/t0_%s%04d.root",
-		brill::JoinPath(config.root_.workspace, config.paths_.particle).c_str(),
+		brill::JoinPath(config.root.workspace, config.paths.particle).c_str(),
 		trigger_infix.c_str(),
 		run
 	).Data();

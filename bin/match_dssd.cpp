@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	if (result.count("trigger")) {
-		config.root_.trigger = result["trigger"].as<std::string>();
+		config.root.trigger = result["trigger"].as<std::string>();
 	}
 	const int run = result["run"].as<int>();
 	if (config.IsJumpRun(run)) {
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 	int normalize_file_run = 0;
-	for (const auto &[start, use] : config.normalize_.runs) {
+	for (const auto &[start, use] : config.normalize.runs) {
 		if (run >= start) normalize_file_run = use;
 	}
 
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
 		working_detector.match_tolerance = match_tolerance;
 
 		brill::DssdNormalizeParameters parameters(detector->front_strips, detector->back_strips);
-		std::string normalize_dir = brill::JoinPath(config.root_.workspace, config.paths_.normalize);
+		std::string normalize_dir = brill::JoinPath(config.root.workspace, config.paths.normalize);
 		TString parameter_path = TString::Format(
 			"%s/%s_%04d.txt",
 			normalize_dir.c_str(),
@@ -111,9 +111,9 @@ int main(int argc, char **argv) {
 
 		TString input_path = TString::Format(
 			"%s/%s_%s%04d.root",
-			brill::JoinPath(config.root_.workspace, config.paths_.ingot).c_str(),
+			brill::JoinPath(config.root.workspace, config.paths.ingot).c_str(),
 			detector_name.c_str(),
-			brill::TriggerInfix(config.root_.trigger).c_str(),
+			brill::TriggerInfix(config.root.trigger).c_str(),
 			run
 		);
 		TFile ipf(input_path, "read");
@@ -128,9 +128,9 @@ int main(int argc, char **argv) {
 
 		TString output_path = TString::Format(
 			"%s/%s_%s%04d.root",
-			brill::JoinPath(config.root_.workspace, config.paths_.match).c_str(),
+			brill::JoinPath(config.root.workspace, config.paths.match).c_str(),
 			detector_name.c_str(),
-			brill::TriggerInfix(config.root_.trigger).c_str(),
+			brill::TriggerInfix(config.root.trigger).c_str(),
 			run
 		);
 		TFile opf(output_path, "recreate");

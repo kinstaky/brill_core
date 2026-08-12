@@ -265,32 +265,32 @@ int AppConfig::Load(const std::string &path) {
 	try {
 		*this = AppConfig();
 		toml::table table = toml::parse_file(path);
-		if (LoadRoot(table, root_)) return -1;
+		if (LoadRoot(table, root)) return -1;
 		if (const auto *paths_tbl = table["paths"].as_table()) {
-			LoadPaths(*paths_tbl, paths_);
+			LoadPaths(*paths_tbl, paths);
 		}
 		if (const auto *t0_tbl = table["t0"].as_table()) {
-			LoadT0(*t0_tbl, t0_);
+			LoadT0(*t0_tbl, t0);
 		}
 		if (const auto *normalize_tbl = table["normalize"].as_table()) {
-			LoadNormalize(*normalize_tbl, normalize_);
+			LoadNormalize(*normalize_tbl, normalize);
 		}
 		if (const auto *track_tbl = table["track"].as_table()) {
-			LoadTrack(*track_tbl, track_);
+			LoadTrack(*track_tbl, track);
 		}
 		if (const auto *identify_tbl = table["identify"].as_table()) {
-			LoadIdentify(*identify_tbl, identify_);
+			LoadIdentify(*identify_tbl, identify);
 		}
 
 		if (const auto *detectors_tbl = table["detectors"].as_table()) {
 			if (const auto *ppac_tbl = (*detectors_tbl)["ppac"].as_table()) {
-				LoadPpac(*ppac_tbl, ppac_);
+				LoadPpac(*ppac_tbl, ppac);
 			}
 			for (const char *name : {"t0d1", "t0d2", "t0d3", "t0d4", "t0s"}) {
 				if (const auto *detector_tbl = (*detectors_tbl)[name].as_table()) {
 					SiliconDetectorConfig config_detector;
 					LoadDetector(*detector_tbl, name, config_detector);
-					detectors_[config_detector.name] = config_detector;
+					detectors[config_detector.name] = config_detector;
 				}
 			}
 		}
@@ -304,16 +304,16 @@ int AppConfig::Load(const std::string &path) {
 const SiliconDetectorConfig* AppConfig::FindDetector(
 	const std::string &name
 ) const {
-	auto iter = detectors_.find(name);
-	if (iter == detectors_.end()) return nullptr;
+	auto iter = detectors.find(name);
+	if (iter == detectors.end()) return nullptr;
 	return &iter->second;
 }
 
 const StraightSliceConfig* AppConfig::FindStraightSlice(
 	const std::string &name
 ) const {
-	auto iter = identify_.straight.find(name);
-	if (iter == identify_.straight.end()) return nullptr;
+	auto iter = identify.straight.find(name);
+	if (iter == identify.straight.end()) return nullptr;
 	return &iter->second;
 }
 
