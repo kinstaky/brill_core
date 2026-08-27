@@ -17,6 +17,8 @@ struct DssdEvent {
 	double back_energy[8];
 	double back_integral[8];
 	double back_time[8];
+	int run;
+	int entry;
 };
 
 void SetupInput(TTree *tree, DssdEvent &event, const std::string &prefix = "");

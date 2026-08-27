@@ -4,6 +4,7 @@ namespace brill {
 
 void SetupInput(TTree *tree, DssdMatchEvent &event, const std::string &prefix) {
 	tree->SetBranchAddress((prefix + "num").c_str(), &event.num);
+	tree->SetBranchAddress((prefix + "flag").c_str(), event.flag);
 	tree->SetBranchAddress((prefix + "front_strip").c_str(), event.front_strip);
 	tree->SetBranchAddress((prefix + "back_strip").c_str(), event.back_strip);
 	tree->SetBranchAddress((prefix + "energy").c_str(), event.energy);
@@ -16,6 +17,7 @@ void SetupInput(TTree *tree, DssdMatchEvent &event, const std::string &prefix) {
 
 void SetupOutput(TTree *tree, DssdMatchEvent &event) {
 	tree->Branch("num", &event.num, "num/I");
+	tree->Branch("flag", event.flag, "flag[num]/I");
 	tree->Branch("front_strip", event.front_strip, "fs[num]/I");
 	tree->Branch("back_strip", event.back_strip, "bs[num]/I");
 	tree->Branch("energy", event.energy, "e[num]/D");

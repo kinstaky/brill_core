@@ -13,6 +13,8 @@ void SetupInput(TTree *tree, DssdEvent &event, const std::string &prefix) {
 	tree->SetBranchAddress((prefix+"back_energy").c_str(), event.back_energy);
 	tree->SetBranchAddress((prefix+"back_integral").c_str(), event.back_integral);
 	tree->SetBranchAddress((prefix+"back_time").c_str(), event.back_time);
+	tree->SetBranchAddress((prefix+"run").c_str(), &event.run);
+	tree->SetBranchAddress((prefix+"entry").c_str(), &event.entry);
 }
 
 void SetupOutput(TTree *tree, DssdEvent &event) {
@@ -24,6 +26,8 @@ void SetupOutput(TTree *tree, DssdEvent &event) {
 	tree->Branch("back_strip", event.back_strip, "bs[bn]/I");
 	tree->Branch("back_energy", event.back_energy, "be[bn]/D");
 	tree->Branch("back_time", event.back_time, "bt[bn]/D");
+	tree->Branch("run", &event.run, "run/I");
+	tree->Branch("entry", &event.entry, "entry/I");
 }
 
 void Reset(DssdEvent &event) {

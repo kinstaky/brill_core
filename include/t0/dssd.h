@@ -19,8 +19,14 @@ public:
 		const int side, const int strip, const double raw_energy
 	) const {
 		return side == 0
-			? front_p0[strip] + front_p1[strip] * raw_energy
-			: back_p0[strip] + back_p1[strip] * raw_energy;
+			? front_p0[strip]
+				+ front_p1[strip] * raw_energy
+				+ front_p2[strip] * raw_energy * raw_energy
+				+ front_p3[strip] * raw_energy * raw_energy * raw_energy
+			: back_p0[strip]
+				+ back_p1[strip] * raw_energy
+				+ back_p2[strip] * raw_energy * raw_energy
+				+ back_p3[strip] * raw_energy * raw_energy * raw_energy;
 	}
 	int Write(const std::string &path) const;
 	int Read(const std::string &path);
@@ -31,9 +37,11 @@ public:
 	double front_p0[kMaxStrips] = {0.0};
 	double front_p1[kMaxStrips] = {1.0};
 	double front_p2[kMaxStrips] = {0.0};
+	double front_p3[kMaxStrips] = {0.0};
 	double back_p0[kMaxStrips] = {0.0};
 	double back_p1[kMaxStrips] = {1.0};
 	double back_p2[kMaxStrips] = {0.0};
+	double back_p3[kMaxStrips] = {0.0};
 };
 
 

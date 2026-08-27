@@ -119,12 +119,6 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	const int run = result["run"].as<int>();
-	// const int end_run = result["end-run"].as<int>();
-	// if (end_run < run) {
-	// 	std::cout << "Error: end_run " << end_run << " should larger than run " << run << ".\n";
-	// 	PrintUsage(options);
-	// 	return 0;
-	// }
 	if (config.IsJumpRun(run)) {
 		std::cout << "Skipping jump run " << run << ".\n";
 		return 0;
@@ -207,6 +201,8 @@ int main(int argc, char **argv) {
 				}
 			}
 			parameters.Apply(raw_event, normalized_event);
+			normalized_event.run = raw_event.run;
+			normalized_event.entry = raw_event.entry;
 			opt.Fill();
 			RemoveAdjacentStrips(normalized_event);
 			for (

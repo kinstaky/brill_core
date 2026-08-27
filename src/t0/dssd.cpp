@@ -125,7 +125,20 @@ void AppendMatch(
 DssdNormalizeParameters::DssdNormalizeParameters(
 	const int fs,
 	const int bs
-): front_strips(fs), back_strips(bs) {}
+): front_strips(fs), back_strips(bs) {
+	for (int i = 0; i < front_strips; ++i) {
+		front_p0[i] = 0.0;
+		front_p1[i] = 1.0;
+		front_p2[i] = 0.0;
+		front_p3[i] = 0.0;
+	}
+	for (int i = 0; i < back_strips; ++i) {
+		back_p0[i] = 0.0;
+		back_p1[i] = 1.0;
+		back_p2[i] = 0.0;
+		back_p3[i] = 0.0;
+	}
+}
 
 int DssdNormalizeParameters::Write(const std::string &path) const {
 	std::ofstream fout(path);
@@ -133,20 +146,22 @@ int DssdNormalizeParameters::Write(const std::string &path) const {
 		std::cerr << "Error: Open output normalize parameter file " << path << " failed.\n";
 		return -1;
 	}
-	fout << "side strip p0 p1 p2\n";
+	fout << "side strip p0 p1 p2 p3\n";
 	// front
 	for (int i = 0; i < front_strips; ++i) {
 		fout << "0 " << i << " "
 			<< front_p0[i] << " "
 			<< front_p1[i] << " "
-			<< front_p2[i] << "\n";
+			<< front_p2[i] << "  "
+			<< front_p3[i] << "\n";
 	}
 	// back
 	for (int i = 0; i < back_strips; ++i) {
 		fout << "1 " << i << " "
 			<< back_p0[i] << " "
 			<< back_p1[i] << " "
-			<< back_p2[i] << "\n";
+			<< back_p2[i] << " "
+			<< back_p3[i] << "\n";
 	}
 	return 0;
 }
@@ -172,7 +187,8 @@ int DssdNormalizeParameters::Read(const std::string &path) {
 		double value0 = 0.0;
 		double value1 = 0.0;
 		double value2 = 0.0;
-		if (!(iss >> side >> strip >> value0 >> value1 >> value2)) continue;
+		double value3 = 0.0;
+		if (!(iss >> side >> strip >> value0 >> value1 >> value2 >> value3)) continue;
 		if (strip < 0 || strip >= (side == 0 ? front_strips : back_strips)) {
 			std::cerr << "Error: Side " << side << " strip " << strip
 				<< " out of range in " << path << ".\n";
@@ -182,10 +198,12 @@ int DssdNormalizeParameters::Read(const std::string &path) {
 			front_p0[strip] = value0;
 			front_p1[strip] = value1;
 			front_p2[strip] = value2;
+			front_p3[strip] = value3;
 		} else {
 			back_p0[strip] = value0;
 			back_p1[strip] = value1;
 			back_p2[strip] = value2;
+			back_p3[strip] = value3;
 		}
 	}
 	return 0;

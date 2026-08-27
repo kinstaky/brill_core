@@ -23,6 +23,7 @@
 int NormalizeStrips(
 	const brill::NromalizeStripsConfig &config,
 	const bool use_integral,
+	const bool use_pol3,
 	TChain &chain,
 	const brill::DssdEvent &event,
 	brill::DssdNormalizeParameters &parameters,
@@ -70,6 +71,7 @@ int NormalizeStrips(
 			if (be < config.ref_energy[0] || be > config.ref_energy[1]) continue;
 			if (fe < config.norm_energy[0] || fe > config.norm_energy[1]) continue;
 			// fill to graph
+			if (fabs(fe - be) > 7000.0) continue;
 			ge[fs].AddPoint(fe, parameters.NormEnergy(1, bs, be));
 		} else {
 			// jump if not reference strips
@@ -81,12 +83,13 @@ int NormalizeStrips(
 			// jump if energy out of range
 			if (fe < config.ref_energy[0] || fe > config.ref_energy[1]) continue;
 			if (be < config.norm_energy[0] || be > config.norm_energy[1]) continue;
-	/*std::cout << config.ref[0] << ", " << config.ref[1] << ", "
-		<< config.norm[0] << ", " << config.norm[1] << ", "
-		<< config.ref_energy[0] << ", " << config.ref_energy[1] << ", "
-		<< config.norm_energy[0] << ", " << config.norm_energy[1] << ", "
-		<< fe << ", " << be << ", " << fs << ", " << bs << "\n";*/
+	// std::cout << config.ref[0] << ", " << config.ref[1] << ", "
+	// 	<< config.norm[0] << ", " << config.norm[1] << ", "
+	// 	<< config.ref_energy[0] << ", " << config.ref_energy[1] << ", "
+	// 	<< config.norm_energy[0] << ", " << config.norm_energy[1] << ", "
+	// 	<< fe << ", " << be << ", " << fs << ", " << bs << "\n";
 			// fill to graph
+			if (fabs(fe - be) > 7000.0) continue;
 			ge[bs].AddPoint(be, parameters.NormEnergy(0, fs, fe));
 		}
 	}
@@ -98,25 +101,34 @@ int NormalizeStrips(
 	for (int i = config.norm[0]; i <= config.norm[1]; ++i) {
 		if (has_normalized[offset+i]) continue;
 		// only fits when over 10 points
-		if (ge[i].GetN() > 5) {
+		if (ge[i].GetN() > 10) {
 			// fitting function
-			TF1 energy_fit("efit", "pol1", 0, 60000);
+			TF1 energy_fit("efit", use_pol3 ? "pol3" : "pol1", 0, 60000);
 			// set initial value
 			energy_fit.SetParameter(0, 0.0);
 			energy_fit.SetParameter(1, 1.0);
-			//energy_fit.SetParLimits(2, -1e-6, 1e-6);
-			//energy_fit.SetParameter(2, 0.0);
+			if (use_pol3) {
+				energy_fit.SetParameter(2, 0.0);
+				// energy_fit.SetParLimits(2, -1e-5, 1e-5);
+				energy_fit.SetParameter(3, 0.0);
+			}
 			// fit
 			ge[i].Fit(&energy_fit, "QR+ ROB=0.8");
 			// store the normalized parameters
 			if (config.norm_side == 0) {
 				parameters.front_p0[i] = energy_fit.GetParameter(0);
 				parameters.front_p1[i] = energy_fit.GetParameter(1);
-				//parameters.front_p2[i] = energy_fit.GetParameter(2);
+				if (use_pol3) {
+					parameters.front_p2[i] = energy_fit.GetParameter(2);
+					parameters.front_p3[i] = energy_fit.GetParameter(3);
+				}
 			} else {
 				parameters.back_p0[i] = energy_fit.GetParameter(0);
 				parameters.back_p1[i] = energy_fit.GetParameter(1);
-				//parameters.back_p2[i] = energy_fit.GetParameter(2);
+				if (use_pol3) {
+					parameters.back_p2[i] = energy_fit.GetParameter(2);
+					parameters.back_p3[i] = energy_fit.GetParameter(3);
+				}
 			}
 		}
 		// store the graph
@@ -129,12 +141,14 @@ int NormalizeStrips(
 				<< " " << parameters.front_p0[i]
 				<< ", " << parameters.front_p1[i]
 				<< ", " << parameters.front_p2[i]
+				<< ", " << parameters.front_p3[i]
 				<< "\n";
 		} else {
 			std::cout << i
 				<< " " << parameters.back_p0[i]
 				<< ", " << parameters.back_p1[i]
 				<< ", " << parameters.back_p2[i]
+				<< ", " << parameters.back_p3[i]
 				<< "\n";
 		}
 	}
@@ -164,6 +178,7 @@ int main(int argc, char **argv) {
 		("h,help", "Print help information.")
 		("r,run", "Run number.", cxxopts::value<int>(), "run")
 		("e,end-run", "End run number.", cxxopts::value<int>(), "run")
+		("p,pol3", "Use pol3 instead.", cxxopts::value<bool>())
 		("t,trigger", "Trigger type.", cxxopts::value<std::string>(), "trigger")
 		(
 			"c,config",
@@ -194,6 +209,7 @@ int main(int argc, char **argv) {
 		PrintUsage(options);
 		return 1;
 	}
+	bool use_pol3 = result.count("pol3");
 
 	const std::set<std::string> allowed_detectors = {"t0d1", "t0d2", "t0d3", "t0d4"};
 	std::vector<std::string> detectors = result["detector"].as<std::vector<std::string>>();
@@ -270,7 +286,8 @@ int main(int argc, char **argv) {
 		opf.cd();
 		for (const auto &strips : strips_config) {
 			NormalizeStrips(
-				strips, detector->use_integral, chain, raw_event,
+				strips, detector->use_integral, use_pol3,
+				chain, raw_event,
 				parameters, has_normalized
 			);
 		}
