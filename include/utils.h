@@ -45,21 +45,48 @@ inline std::string CutFilePath(
 	);
 }
 
-inline bool ParseCutVectorLine(const std::string &line, std::vector<double> &values) {
-	size_t left = line.find('{');
-	size_t right = line.rfind('}');
-	if (left == std::string::npos || right == std::string::npos || right <= left) {
-		return false;
+inline bool ParseCutVectorLines(
+	const std::vector<std::string> &lines,
+	size_t &index,
+	std::vector<double> &values
+) {
+	size_t left = lines[index].find('{');
+	size_t right = lines[index].rfind('}');
+	if (left == std::string::npos) return false;
+	// in single line
+	if (right != std::string::npos) {
+		std::string text = lines[index].substr(left + 1, right - left - 1);
+		for (char &ch : text) {
+			if (ch == ',') ch = ' ';
+		}
+		std::istringstream iss(text);
+		double value = 0.0;
+		values.clear();
+		while (iss >> value) {
+			values.push_back(value);
+		}
+		index++;
+		return !values.empty();
 	}
-	std::string text = line.substr(left + 1, right - left - 1);
-	for (char &ch : text) {
-		if (ch == ',') ch = ' ';
-	}
-	std::istringstream iss(text);
-	double value = 0.0;
+	// in multiple lines
 	values.clear();
-	while (iss >> value) {
-		values.push_back(value);
+	++index;
+	while (index < lines.size()) {
+		size_t right = lines[index].rfind('}');
+		if (right != std::string::npos) {
+			++index;
+			break;
+		}
+		std::string text = lines[index];
+		for (char &ch : text) {
+			if (ch == ',') ch = ' ';
+		}
+		std::istringstream iss(text);
+		double value = 0.0;
+		while (iss >> value) {
+			values.push_back(value);
+		}
+		++index;
 	}
 	return !values.empty();
 }
@@ -86,15 +113,9 @@ inline int ParseCutFile(
 
 	std::vector<double> x;
 	std::vector<double> y;
-	for (size_t i = 4; i < lines.size(); ++i) {
-		if (x.empty()) {
-			ParseCutVectorLine(lines[i], x);
-			if (!x.empty()) continue;
-		} else if (y.empty()) {
-			ParseCutVectorLine(lines[i], y);
-			if (!y.empty()) break;
-		}
-	}
+	size_t line_index = 4;
+	ParseCutVectorLines(lines, line_index, x);
+	ParseCutVectorLines(lines, line_index, y);
 	if (x.empty() || y.empty()) {
 		std::cerr << "Error: Parse cut vectors from " << path << " failed.\n";
 		return -1;

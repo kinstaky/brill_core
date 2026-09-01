@@ -689,7 +689,7 @@ int main(int argc, char **argv) {
 
 	TString output_path = TString::Format(
 		"%s/t0_%s%04d.root",
-		brill::JoinPath(config.root.workspace, config.paths.track).c_str(),
+		brill::JoinPath(config.root.workspace, config.paths.telescope).c_str(),
 		trigger_infix.c_str(),
 		run
 	);
@@ -703,9 +703,6 @@ int main(int argc, char **argv) {
 	long long last_percentage = -1;
 	std::printf("Tracking T0   0%%");
 	std::fflush(stdout);
-	// long long fix = 135609;
-	// long long fix = 509;
-	// for (long long entry = fix; entry < fix+1; ++entry) {
 	for (long long entry = 0; entry < total; ++entry) {
 		long long percentage = total > 0 ? entry * 100ll / total : 100ll;
 		if (percentage > last_percentage) {

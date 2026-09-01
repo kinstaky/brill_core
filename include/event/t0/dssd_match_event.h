@@ -17,6 +17,8 @@ struct DssdMatchEvent {
 	double z[8] = {0.0};
 	// 0-f1b1, 1-f1b2, 2-f2b1, 3-f2b2
 	int merge_tag[8] = {0};
+	int run;
+	int entry;
 };
 
 void SetupInput(TTree *tree, DssdMatchEvent &event, const std::string &prefix = "");

@@ -13,6 +13,7 @@ target_link_libraries(
 	PUBLIC
 	brill_dssd_event
 	brill_dssd_match_event
+	brill_t0_event
 	ROOT::Core
 	ROOT::RIO
 	ROOT::Tree

@@ -54,7 +54,7 @@ void LoadPaths(const toml::table &table, AppPaths &paths) {
 	LoadPath(table, "ingot", paths.ingot);
 	LoadPath(table, "normalize", paths.normalize);
 	LoadPath(table, "match", paths.match);
-	LoadPath(table, "track", paths.track);
+	LoadPath(table, "telescope", paths.telescope);
 	LoadPath(table, "particle", paths.particle);
 	LoadPath(table, "estimate", paths.estimate);
 	LoadPath(table, "spectrum", paths.spectrum);

@@ -88,7 +88,7 @@ struct AppPaths {
 	std::string ingot = "ingot";
 	std::string normalize = "normalize";
 	std::string match = "match";
-	std::string track = "track";
+	std::string telescope = "telescope";
 	std::string particle = "particle";
 	std::string estimate = "estimate";
 	std::string spectrum = "spectrum";

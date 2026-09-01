@@ -90,3 +90,4 @@ endif()
 
 add_library(brill::core ALIAS brill_core)
 add_library(brill::t0 ALIAS brill_t0_dssd)
+add_library(brill::energy_calculator ALIAS brill_energy_calculator)

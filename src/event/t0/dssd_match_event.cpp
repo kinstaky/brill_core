@@ -13,6 +13,8 @@ void SetupInput(TTree *tree, DssdMatchEvent &event, const std::string &prefix) {
 	tree->SetBranchAddress((prefix + "y").c_str(), event.y);
 	tree->SetBranchAddress((prefix + "z").c_str(), event.z);
 	tree->SetBranchAddress((prefix + "merge_tag").c_str(), event.merge_tag);
+	tree->SetBranchAddress((prefix + "run").c_str(), &event.run);
+	tree->SetBranchAddress((prefix + "entry").c_str(), &event.entry);
 }
 
 void SetupOutput(TTree *tree, DssdMatchEvent &event) {
@@ -26,10 +28,14 @@ void SetupOutput(TTree *tree, DssdMatchEvent &event) {
 	tree->Branch("y", event.y, "y[num]/D");
 	tree->Branch("z", event.z, "z[num]/D");
 	tree->Branch("merge_tag", event.merge_tag, "mt[num]/I");
+	tree->Branch("run", &event.run, "run/I");
+	tree->Branch("entry", &event.entry, "entry/I");
 }
 
 void Reset(DssdMatchEvent &event) {
 	event.num = 0;
+	event.run = -1;
+	event.entry = -1;
 }
 
 } // namespace brill
