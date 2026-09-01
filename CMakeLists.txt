@@ -83,5 +83,10 @@ MESSAGE("  cern ROOT path.......: " ${CMAKE_FIND_ROOT_PATH})
 add_subdirectory(src)
 add_subdirectory(bin)
 
+# Examples are only part of standalone brill builds, not consuming projects.
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+	add_subdirectory(examples)
+endif()
+
 add_library(brill::core ALIAS brill_core)
 add_library(brill::t0 ALIAS brill_t0_dssd)

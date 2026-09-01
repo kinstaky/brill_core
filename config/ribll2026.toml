@@ -1,0 +1,393 @@
+workspace = "/data/disk1/delta"
+trigger = "t1"
+jump_run = [112, 1096, 1101, 1103, 1104, 1105, 1138, 1140, 1141, 1145, 1147]
+assets = "assets"
+
+[paths]
+ore = "ore"
+grit = "grit"
+ingot = "ingot"
+normalize = "normalize"
+match = "match"
+telescope = "track"
+particle = "particle"
+spectrum = "spectrum"
+estimate = "estimate"
+
+[t0]
+silicon = ["t0d1", "t0d2", "t0d3", "t0d4", "t0s"]
+
+[detectors.ppac]
+z_mm = [-52.0, -332.0, -612.0]
+x_offset_mm = [0.0, 0.0, 0.0]
+y_offset_mm = [0.0, 0.0, 0.0]
+x_scale = [1.0, 1.0, 1.0]
+y_scale = [1.0, 1.0, 1.0]
+
+[detectors.t0d1]
+type = "dssd"
+front_strips = 32
+back_strips = 32
+thickness_um = 68.0
+size_x_mm = 64.0
+size_y_mm = 64.0
+center_x_mm = 0.0
+center_y_mm = 0.0
+z_mm = 100.0
+match_tolerance = 200.0
+
+[detectors.t0d2]
+type = "dssd"
+front_strips = 64
+back_strips = 64
+thickness_um = 1005.0
+size_x_mm = 64.0
+size_y_mm = 64.0
+center_x_mm = 0.0
+center_y_mm = 0.0
+z_mm = 111.76
+match_tolerance = 150.0
+
+[detectors.t0d3]
+type = "dssd"
+front_strips = 32
+back_strips = 32
+thickness_um = 995.0
+size_x_mm = 64.0
+size_y_mm = 64.0
+center_x_mm = 0.0
+center_y_mm = 0.0
+z_mm = 123.52
+match_tolerance = 150.0
+
+[detectors.t0d4]
+type = "dssd"
+front_strips = 32
+back_strips = 32
+thickness_um = 999.0
+size_x_mm = 64.0
+size_y_mm = 64.0
+center_x_mm = 0.0
+center_y_mm = 0.0
+z_mm = 135.28
+match_tolerance = 100.0
+
+[detectors.t0s]
+type = "ssd"
+thickness_um = 1500.0
+size_x_mm = 64.0
+size_y_mm = 64.0
+center_x_mm = 0.0
+center_y_mm = 0.0
+z_mm = 0.0
+
+[[normalize.run]]
+run = 159
+use = 159
+[[normalize.run]]
+run = 1091
+use = 1091
+[[normalize.run]]
+run = 1097
+use = 1097
+[[normalize.run]]
+run = 1106
+use = 1106
+[[normalize.run]]
+run = 1107
+use = 1107
+[[normalize.t0d1.strips]]
+index = 0
+norm_side = 1
+ref = [15, 15]
+norm = [15, 20]
+ref_energy = [1000.0, 60000.0]
+norm_energy = [1000.0, 60000.0]
+
+[[normalize.t0d1.strips]]
+index = 1
+norm_side = 0
+ref = [15, 20]
+norm = [6, 22]
+ref_energy = [1000.0, 60000.0]
+norm_energy = [1000.0, 60000.0]
+
+[[normalize.t0d1.strips]]
+index = 2
+norm_side = 1
+ref = [6, 22]
+norm = [0, 31]
+ref_energy = [1000.0, 60000.0]
+norm_energy = [1000.0, 60000.0]
+
+[[normalize.t0d1.strips]]
+index = 3
+norm_side = 0
+ref = [0, 31]
+norm = [0, 31]
+ref_energy = [5000.0, 60000.0]
+norm_energy = [5000.0, 60000.0]
+
+[[normalize.t0d2.strips]]
+index = 0
+norm_side = 1
+ref = [31, 31]
+norm = [30, 36]
+ref_energy = [1000.0, 60000.0]
+norm_energy = [1000.0, 60000.0]
+
+[[normalize.t0d2.strips]]
+index = 1
+norm_side = 0
+ref = [30, 36]
+norm = [13, 42]
+ref_energy = [1000.0, 60000.0]
+norm_energy = [1000.0, 60000.0]
+
+[[normalize.t0d2.strips]]
+index = 2
+norm_side = 1
+ref = [13, 42]
+norm = [0, 63]
+ref_energy = [1000.0, 60000.0]
+norm_energy = [1000.0, 60000.0]
+
+[[normalize.t0d2.strips]]
+index = 3
+norm_side = 0
+ref = [0, 63]
+norm = [0, 63]
+ref_energy = [1000.0, 60000.0]
+norm_energy = [1000.0, 60000.0]
+
+[[normalize.t0d3.strips]]
+index = 0
+norm_side = 1
+ref = [15, 15]
+norm = [10, 15]
+ref_energy = [1000.0, 60000.0]
+norm_energy = [1000.0, 60000.0]
+
+[[normalize.t0d3.strips]]
+index = 1
+norm_side = 0
+ref = [10, 15]
+norm = [16, 31]
+ref_energy = [1000.0, 60000.0]
+norm_energy = [1000.0, 60000.0]
+
+[[normalize.t0d3.strips]]
+index = 2
+norm_side = 1
+ref = [16, 31]
+norm = [0, 31]
+ref_energy = [5000.0, 60000.0]
+norm_energy = [5000.0, 60000.0]
+
+[[normalize.t0d3.strips]]
+index = 3
+norm_side = 0
+ref = [0, 31]
+norm = [0, 31]
+ref_energy = [1000.0, 60000.0]
+norm_energy = [1000.0, 60000.0]
+
+[[normalize.t0d4.strips]]
+index = 0
+norm_side = 1
+ref = [15, 15]
+norm = [9, 15]
+ref_energy = [0.0, 60000.0]
+norm_energy = [0.0, 60000.0]
+
+[[normalize.t0d4.strips]]
+index = 1
+norm_side = 0
+ref = [9, 15]
+norm = [6, 22]
+ref_energy = [0.0, 60000.0]
+norm_energy = [0.0, 60000.0]
+
+[[normalize.t0d4.strips]]
+index = 2
+norm_side = 1
+ref = [6, 22]
+norm = [0, 31]
+ref_energy = [0.0, 60000.0]
+norm_energy = [0.0, 60000.0]
+
+[[normalize.t0d4.strips]]
+index = 3
+norm_side = 0
+ref = [0, 31]
+norm = [0, 31]
+ref_energy = [0.0, 60000.0]
+norm_energy = [0.0, 60000.0]
+
+[track]
+d2d1_window = [-4.0, 2.0]
+d3d2_window = [-4.0, 4.0]
+d4d3_window = [-5.0, 5.0]
+
+[identify.straight.t0d1d2]
+A = 0.1075
+B = -0.0744
+[[identify.straight.t0d1d2.particles]]
+particle = "4He"
+mean = 4060.3
+sigma = 139.5
+range = 2.0
+
+[identify.straight.t0d2d3]
+A = 0.4490
+B = -0.0603
+[[identify.straight.t0d2d3.particles]]
+particle = "3He"
+mean = 5006
+sigma = 111
+range = 1.0
+[[identify.straight.t0d2d3.particles]]
+particle = "4He"
+mean = 5679.3
+sigma = 60.7
+range = 3.0
+[[identify.straight.t0d2d3.particles]]
+particle = "6Li"
+mean = 10760
+sigma = 119
+range = 2.0
+[[identify.straight.t0d2d3.particles]]
+particle = "7Li"
+mean = 11512
+sigma = 145
+range = 1.5
+[[identify.straight.t0d2d3.particles]]
+particle = "7Be"
+mean = 15933
+sigma = 157
+range = 3.0
+[[identify.straight.t0d2d3.particles]]
+particle = "9Be"
+mean = 17799
+sigma = 260
+range = 1.0
+[[identify.straight.t0d2d3.particles]]
+particle = "10B"
+mean = 23952
+sigma = 205
+range = 1.5
+[[identify.straight.t0d2d3.particles]]
+particle = "11B"
+mean = 24953
+sigma = 175
+range = 2.0
+[[identify.straight.t0d2d3.particles]]
+particle = "10C"
+mean = 29355
+sigma = 320
+range = 1.0
+[[identify.straight.t0d2d3.particles]]
+particle = "11C"
+mean = 30650
+sigma = 211
+range = 2.0
+[[identify.straight.t0d2d3.particles]]
+particle = "12C"
+mean = 31812
+sigma = 175
+range = 3.0
+[[identify.straight.t0d2d3.particles]]
+particle = "13C"
+mean = 32956
+sigma = 258
+range = 1.0
+
+
+[identify.straight.t0d3d4]
+A = 0.6778
+B = -0.0580
+[[identify.straight.t0d3d4.particles]]
+particle = "3He"
+mean = 5317
+sigma = 123
+range = 1.0
+[[identify.straight.t0d3d4.particles]]
+particle = "4He"
+mean = 6012.4
+sigma = 68.9
+range = 3.0
+[[identify.straight.t0d3d4.particles]]
+particle = "6Li"
+mean = 11373
+sigma = 118
+range = 1.5
+[[identify.straight.t0d3d4.particles]]
+particle = "7Li"
+mean = 12152
+sigma = 124
+range = 1.5
+[[identify.straight.t0d3d4.particles]]
+particle = "7Be"
+mean = 16809
+sigma = 121
+range = 3.0
+[[identify.straight.t0d3d4.particles]]
+particle = "9Be"
+mean = 18747
+sigma = 133
+range = 2.0
+[[identify.straight.t0d3d4.particles]]
+particle = "10B"
+mean = 25248
+sigma = 141
+range = 2.5
+[[identify.straight.t0d3d4.particles]]
+particle = "11B"
+mean = 26312
+sigma = 129
+range = 2.0
+[[identify.straight.t0d3d4.particles]]
+particle = "12B"
+mean = 27450
+sigma = 210
+range = 1.0
+[[identify.straight.t0d3d4.particles]]
+particle = "10C"
+mean = 30970
+sigma = 190
+range = 1.0
+[[identify.straight.t0d3d4.particles]]
+particle = "11C"
+mean = 32312
+sigma = 162
+range = 2.0
+[[identify.straight.t0d3d4.particles]]
+particle = "12C"
+mean = 33530
+sigma = 149
+range = 2.5
+[[identify.straight.t0d3d4.particles]]
+particle = "13C"
+mean = 34720
+sigma = 149
+range = 2.0
+
+
+[identify.straight.t0d4s]
+A = 0.9522
+B = -0.0413
+#[[identify.straight.t0d4s.particles]]
+#particle = "3He"
+#mean = 8355
+#sigma = 350
+#range = 0.5
+[[identify.straight.t0d4s.particles]]
+particle = "4He"
+mean = 9444
+sigma = 123
+range = 2.0
+[[identify.straight.t0d4s.particles]]
+particle = "7Be"
+mean = 26418
+sigma = 210
+range = 2.0

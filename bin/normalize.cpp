@@ -71,7 +71,7 @@ int NormalizeStrips(
 			if (be < config.ref_energy[0] || be > config.ref_energy[1]) continue;
 			if (fe < config.norm_energy[0] || fe > config.norm_energy[1]) continue;
 			// fill to graph
-			if (fabs(fe - be) > 7000.0) continue;
+			// if (fabs(fe - be) > 7000.0) continue;
 			ge[fs].AddPoint(fe, parameters.NormEnergy(1, bs, be));
 		} else {
 			// jump if not reference strips
@@ -89,7 +89,7 @@ int NormalizeStrips(
 	// 	<< config.norm_energy[0] << ", " << config.norm_energy[1] << ", "
 	// 	<< fe << ", " << be << ", " << fs << ", " << bs << "\n";
 			// fill to graph
-			if (fabs(fe - be) > 7000.0) continue;
+			// if (fabs(fe - be) > 7000.0) continue;
 			ge[bs].AddPoint(be, parameters.NormEnergy(0, fs, fe));
 		}
 	}
