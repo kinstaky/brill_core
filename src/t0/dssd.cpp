@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 
 namespace brill {
 
@@ -141,6 +142,10 @@ DssdNormalizeParameters::DssdNormalizeParameters(
 }
 
 int DssdNormalizeParameters::Write(const std::string &path) const {
+	std::filesystem::path file_path(path);
+	if (!file_path.parent_path().empty()) {
+		std::filesystem::create_directories(file_path.parent_path());
+	}
 	std::ofstream fout(path);
 	if (!fout.good()) {
 		std::cerr << "Error: Open output normalize parameter file " << path << " failed.\n";
@@ -209,6 +214,43 @@ int DssdNormalizeParameters::Read(const std::string &path) {
 	return 0;
 }
 
+CalibrationParameters::CalibrationParameters(int layers) {
+	p0.resize(layers);
+	p1.resize(layers);
+}
+
+int CalibrationParameters::Write(const std::string &path) const {
+	std::filesystem::path file_path(path);
+	if (!file_path.parent_path().empty()) {
+		std::filesystem::create_directories(file_path.parent_path());
+	}
+	std::ofstream fout(path);
+	if (!fout.good()) {
+		std::cerr << "Error: Open output parameter file " << path << " failed.\n";
+		return -1;
+	}
+
+	fout << "# layer p0 p1\n";
+	for (size_t layer = 0; layer < Layers(); ++layer) {
+		fout << layer << " " << p0[layer] << " " << p1[layer] << "\n";
+	}
+	return 0;
+}
+
+int CalibrationParameters::Read(const std::string &path) {
+	std::ifstream fin(path);
+	if (!fin.good()) {
+		std::cerr << "Error: Open calibration parameter file " << path << " failed.\n";
+		return -1;
+	}
+	std::string header;
+	std::getline(fin, header);
+	int tmp = -1;
+	for (size_t i = 0; i < Layers(); ++i) {
+		fin >> tmp >> p0[i] >> p1[i];
+	}
+	return 0;
+}
 
 struct Hit {
 	int strip = 0;

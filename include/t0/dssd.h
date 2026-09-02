@@ -44,6 +44,18 @@ public:
 	double back_p3[kMaxStrips] = {0.0};
 };
 
+class CalibrationParameters {
+public:
+	CalibrationParameters(int layers);
+
+	inline size_t Layers() const { return p0.size(); }
+	int Write(const std::string &path) const;
+	int Read(const std::string &path);
+
+	std::vector<double> p0;
+	std::vector<double> p1;
+};
+
 
 void MatchDssdEvent(
 	const DssdEvent &input,

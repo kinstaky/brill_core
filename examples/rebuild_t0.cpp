@@ -205,9 +205,9 @@ int main(int argc, char **argv) {
 	}
 
 	const std::string trigger_infix = brill::TriggerInfix(config.root.trigger);
-	const std::string track_path = TString::Format(
+	const std::string tele_path = TString::Format(
 		"%s/t0_%s%04d.root",
-		brill::JoinPath(config.root.workspace, config.paths.track).c_str(),
+		brill::JoinPath(config.root.workspace, config.paths.telescope).c_str(),
 		trigger_infix.c_str(),
 		run
 	).Data();
@@ -227,14 +227,14 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	TFile ipf(track_path.c_str(), "read");
+	TFile ipf(tele_path.c_str(), "read");
 	if (ipf.IsZombie()) {
-		std::cerr << "Error: Open tracked T0 file " << track_path << " failed.\n";
+		std::cerr << "Error: Open tracked T0 file " << tele_path << " failed.\n";
 		return 1;
 	}
 	TTree *ipt = static_cast<TTree*>(ipf.Get("tree"));
 	if (!ipt) {
-		std::cerr << "Error: Get tree from " << track_path << " failed.\n";
+		std::cerr << "Error: Get tree from " << tele_path << " failed.\n";
 		return 1;
 	}
 

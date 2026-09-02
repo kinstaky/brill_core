@@ -8,3 +8,6 @@ target_include_directories(brill_config PUBLIC ${PROJECT_SOURCE_DIR} ${ROOT_INCL
 
 add_library(brill_core INTERFACE)
 target_link_libraries(brill_core INTERFACE brill_config)
+
+add_library(brill_particle INTERFACE)
+target_link_libraries(brill_particle INTERFACE brill_particle_event)
