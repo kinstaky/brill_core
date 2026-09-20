@@ -61,8 +61,9 @@ std::string RangeCachePath(
 
 int BuildSliceFunctions(
 	const brill::RangeEnergyCalculator &calculator,
-	double first_thickness,
-	double second_thickness,
+	const double first_thickness,
+	const double second_thickness,
+	const double max_energy,
 	std::vector<double> &delta_energy,
 	std::vector<double> &energy
 ) {
@@ -70,7 +71,9 @@ int BuildSliceFunctions(
 	energy.clear();
 
 	double min_total_energy = calculator.Energy(first_thickness);
-	double max_total_energy = calculator.Energy(first_thickness + second_thickness);
+	double max_total_energy = second_thickness > 0.0
+		? calculator.Energy(first_thickness + second_thickness)
+		: max_energy;
 
 	for (
 		double total_energy = min_total_energy;
@@ -79,7 +82,7 @@ int BuildSliceFunctions(
 	) {
 		double residual_range = calculator.Range(total_energy) - first_thickness;
 		if (residual_range <= 0.0) continue;
-		if (residual_range > second_thickness) break;
+		if (second_thickness > 0.0 && residual_range > second_thickness) break;
 
 		double residual_energy = calculator.Energy(residual_range);
 		if (residual_energy < 0.0 || residual_energy > total_energy) continue;
@@ -110,6 +113,7 @@ DeltaEnergyCalculator::DeltaEnergyCalculator(
 			throw std::runtime_error("Load T0 delta energy calculator failed.");
 		}
 	}
+	max_energy_ = 1000.0;
 }
 
 double DeltaEnergyCalculator::Energy(unsigned short layer, double delta_energy) const {
@@ -120,6 +124,10 @@ double DeltaEnergyCalculator::Energy(unsigned short layer, double delta_energy) 
 double DeltaEnergyCalculator::DeltaEnergy(unsigned short layer, double energy) const {
 	if (layer >= de_e_funcs_.size() || !de_e_funcs_[layer]) return 0.0;
 	return de_e_funcs_[layer]->Eval(energy);
+}
+
+void DeltaEnergyCalculator::SetMaxLastLayerEnergy(const double max_energy) {
+	max_energy_ = max_energy;
 }
 
 int DeltaEnergyCalculator::Initialize(
@@ -156,11 +164,12 @@ int DeltaEnergyCalculator::Initialize(
 
 	std::vector<double> delta_energy;
 	std::vector<double> energy;
-	for (size_t i = 0; i + 1 < thickness_.size(); ++i) {
+	for (size_t i = 0; i < thickness_.size(); ++i) {
 		if (BuildSliceFunctions(
 			calculator,
 			thickness_[i],
-			thickness_[i+1],
+			i == thickness_.size() - 1 ? -1.0 : thickness_[i+1],
+			max_energy_,
 			delta_energy,
 			energy
 		)) {
@@ -216,10 +225,11 @@ int DeltaEnergyCalculator::Load(const AppConfig &config) {
 	de_e_funcs_.clear();
 	e_de_funcs_.clear();
 
+	if (!std::filesystem::exists(CachePath(config))) return -1;
 	std::unique_ptr<TFile> file(TFile::Open(CachePath(config).c_str(), "read"));
 	if (!file || file->IsZombie()) return -1;
 
-	for (size_t i = 0; i + 1 < thickness_.size(); ++i) {
+	for (size_t i = 0; i < thickness_.size(); ++i) {
 		auto *de_e = dynamic_cast<TSpline3*>(file->Get(TString::Format("de_e_%zu", i)));
 		auto *e_de = dynamic_cast<TSpline3*>(file->Get(TString::Format("e_de_%zu", i)));
 		if (!de_e || !e_de) return -1;

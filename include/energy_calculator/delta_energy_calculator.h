@@ -19,8 +19,9 @@ public:
 		int mass
 	);
 
-	double Energy(unsigned short layer, double delta_energy) const;
-	double DeltaEnergy(unsigned short layer, double energy) const;
+	double Energy(unsigned short layer, const double delta_energy) const;
+	double DeltaEnergy(unsigned short layer, const double energy) const;
+	void SetMaxLastLayerEnergy(const double max_energy);
 
 	int Initialize(
 		const AppConfig &config,
@@ -31,6 +32,7 @@ public:
 private:
 	int charge_ = 0;
 	int mass_ = 0;
+	double max_energy_ = 1000;
 	std::vector<double> thickness_;
 	std::vector<std::unique_ptr<TSpline3>> de_e_funcs_;
 	std::vector<std::unique_ptr<TSpline3>> e_de_funcs_;

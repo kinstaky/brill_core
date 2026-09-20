@@ -192,7 +192,7 @@ int main(int argc, char **argv) {
 	}
 
 	const std::string trigger_infix = brill::TriggerInfix(config.root.trigger);
-	const std::string track_dir = brill::JoinPath(config.root.workspace, config.paths.track);
+	const std::string tele_dir = brill::JoinPath(config.root.workspace, config.paths.telescope);
 
 	TChain chain("tree");
 	int added_files = 0;
@@ -200,7 +200,7 @@ int main(int argc, char **argv) {
 		if (config.IsJumpRun(current_run)) continue;
 		std::string path = TString::Format(
 			"%s/t0_%s%04d.root",
-			track_dir.c_str(),
+			tele_dir.c_str(),
 			trigger_infix.c_str(),
 			current_run
 		).Data();
