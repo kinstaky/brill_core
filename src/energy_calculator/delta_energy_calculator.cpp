@@ -101,19 +101,20 @@ namespace brill {
 DeltaEnergyCalculator::DeltaEnergyCalculator(
 	const AppConfig &config,
 	int charge,
-	int mass
+	int mass,
+	int max_energy
 )
 : charge_(charge)
-, mass_(mass) {
+, mass_(mass)
+, max_energy_(max_energy) {
 	if (Load(config) != 0) {
-		if (Initialize(config, charge_, mass_)) {
+		if (Initialize(config)) {
 			throw std::runtime_error("Initialize T0 delta energy calculator failed.");
 		}
 		if (Load(config) != 0) {
 			throw std::runtime_error("Load T0 delta energy calculator failed.");
 		}
 	}
-	max_energy_ = 1000.0;
 }
 
 double DeltaEnergyCalculator::Energy(unsigned short layer, double delta_energy) const {
@@ -126,34 +127,19 @@ double DeltaEnergyCalculator::DeltaEnergy(unsigned short layer, double energy) c
 	return de_e_funcs_[layer]->Eval(energy);
 }
 
-void DeltaEnergyCalculator::SetMaxLastLayerEnergy(const double max_energy) {
-	max_energy_ = max_energy;
-}
-
-int DeltaEnergyCalculator::Initialize(
-	const AppConfig &config,
-	int charge,
-	int mass
-) {
+int DeltaEnergyCalculator::Initialize(const AppConfig &config) {
 	if (CollectSiliconDetectors(config, thickness_)) return -1;
 
-	std::filesystem::path path(
-		TString::Format(
-			"%s/t0_delta_z%d_a%d.root",
-			JoinPath(config.root.workspace, config.paths.energy_calculator).c_str(),
-			charge,
-			mass
-		).Data()
-	);
+	std::filesystem::path path(CachePath(config));
 	if (!path.parent_path().empty()) {
 		std::filesystem::create_directories(path.parent_path());
 	}
 
 	RangeEnergyCalculator calculator(
-		charge,
-		mass,
+		charge_,
+		mass_,
 		SiliconMaterial(),
-		RangeCachePath(config, charge, mass)
+		RangeCachePath(config, charge_, mass_)
 	);
 
 	TFile output(path.string().c_str(), "recreate");
@@ -169,7 +155,7 @@ int DeltaEnergyCalculator::Initialize(
 			calculator,
 			thickness_[i],
 			i == thickness_.size() - 1 ? -1.0 : thickness_[i+1],
-			max_energy_,
+			double(max_energy_),
 			delta_energy,
 			energy
 		)) {
@@ -246,10 +232,11 @@ int DeltaEnergyCalculator::Load(const AppConfig &config) {
 
 std::string DeltaEnergyCalculator::CachePath(const AppConfig &config) const {
 	return TString::Format(
-		"%s/t0_delta_z%d_a%d.root",
+		"%s/t0_delta_z%d_a%d_%d.root",
 		JoinPath(config.root.workspace, config.paths.energy_calculator).c_str(),
 		charge_,
-		mass_
+		mass_,
+		max_energy_
 	).Data();
 }
 
