@@ -13,6 +13,7 @@ void SetupInput(TTree *tree, T0Event &event, const std::string &prefix) {
 	tree->SetBranchAddress((prefix + "x").c_str(), event.x);
 	tree->SetBranchAddress((prefix + "y").c_str(), event.y);
 	tree->SetBranchAddress((prefix + "z").c_str(), event.z);
+	tree->SetBranchAddress((prefix + "scintillator_index").c_str(), event.scintillator_index);
 	tree->SetBranchAddress((prefix + "last").c_str(), event.last);
 	tree->SetBranchAddress((prefix + "run").c_str(), &event.run);
 	tree->SetBranchAddress((prefix + "entry").c_str(), &event.entry);
@@ -29,6 +30,7 @@ void SetupOutput(TTree *tree, T0Event &event) {
 	tree->Branch("x", event.x, "x[num][4]/D");
 	tree->Branch("y", event.y, "y[num][4]/D");
 	tree->Branch("z", event.z, "z[num][4]/D");
+	tree->Branch("scintillator_index", event.scintillator_index, "sindex[num]/I");
 	tree->Branch("last", event.last, "last[num][4]/I");
 	tree->Branch("run", &event.run, "run/I");
 	tree->Branch("entry", &event.entry, "entry/I");
@@ -51,6 +53,7 @@ void Reset(T0Event &event) {
 			event.z[i][j] = 0.0;
 			event.last[i][j] = -1;
 		}
+		event.scintillator_index[i] = -1;
 	}
 	event.run = -1;
 	event.entry = -1;

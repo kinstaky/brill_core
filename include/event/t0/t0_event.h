@@ -17,6 +17,7 @@ struct T0Event {
 	double x[8][4];
 	double y[8][4];
 	double z[8][4];
+	int scintillator_index[8];
 	int last[8][4];
 	int run;
 	int entry;
