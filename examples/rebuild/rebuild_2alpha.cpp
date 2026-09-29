@@ -191,7 +191,7 @@ int main(int argc, char **argv) {
 	TChain chain("tree");
 	int added_runs = 0;
 	for (int current_run = run; current_run <= end_run; ++current_run) {
-		if (config.IsJumpRun(current_run)) continue;
+		if (config.IsSkipRun(current_run)) continue;
 		std::string path = TString::Format(
 			"%s/t0_%s%04d.root",
 			particle_dir.c_str(),

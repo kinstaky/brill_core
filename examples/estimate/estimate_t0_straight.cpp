@@ -299,7 +299,7 @@ int main(int argc, char **argv) {
 	TChain chain_s("tree");
 	int added_runs = 0;
 	for (int current_run = run; current_run <= end_run; ++current_run) {
-		if (config.IsJumpRun(current_run)) continue;
+		if (config.IsSkipRun(current_run)) continue;
 		++added_runs;
 		chain1.Add(TString::Format(
 			"%s/t0d1_%s%04d.root",

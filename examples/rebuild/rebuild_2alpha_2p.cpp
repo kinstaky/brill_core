@@ -669,7 +669,7 @@ int main(int argc, char **argv) {
 	TChain chain4("tree");
 	std::vector<int> source_runs;
 	for (int current = run; current <= end_run; ++current) {
-		if (config.IsJumpRun(current)) continue;
+		if (config.IsSkipRun(current)) continue;
 		std::string d2_path = TString::Format(
 			"%s/t0d2_%s%04d.root",
 			match_dir.c_str(),

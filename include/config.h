@@ -110,7 +110,7 @@ public:
 	int Load(const std::string &path);
 	const SiliconDetectorConfig *FindDetector(const std::string &name) const;
 	const StraightSliceConfig *FindStraightSlice(const std::string &name) const;
-	inline bool IsJumpRun(int run) const {
+	inline bool IsSkipRun(int run) const {
 		return std::find(root.jump_run.begin(), root.jump_run.end(), run) != root.jump_run.end();
 	}
 

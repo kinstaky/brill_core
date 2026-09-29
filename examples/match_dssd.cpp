@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 		config.root.trigger = result["trigger"].as<std::string>();
 	}
 	const int run = result["run"].as<int>();
-	if (config.IsJumpRun(run)) {
+	if (config.IsSkipRun(run)) {
 		std::cout << "Skipping jump run " << run << ".\n";
 		return 0;
 	}
